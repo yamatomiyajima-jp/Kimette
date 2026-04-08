@@ -27,46 +27,30 @@ export async function createRoom(formData: FormData): Promise<string> {
     throw new Error("ニックネームとルーム名は必須です");
   }
 
-  const supabase = await createClient();
   const urlSlug = generateSlug();
+  const supabase = await createClient();
 
-  // ルーム作成（id のみ取得）
-  const { data: room, error: roomError } = await supabase
-    .from("rooms")
-    .insert({
-      name: roomName,
-      url_slug: urlSlug,
-      chips_per_person: chipsPerPerson,
-      start_mode: startMode,
-      vote_visibility: voteVisibility,
-      votes_anonymous: votesAnonymous,
-      comments_anonymous_mode: commentsAnonymous,
-      items_anonymous: itemsAnonymous,
-    })
-    .select("id")
-    .single();
+  // RPC でルーム作成＋参加者登録を1回のDB往復で実行
+  const { data, error } = await supabase.rpc("create_room_with_creator", {
+    p_room_name: roomName,
+    p_url_slug: urlSlug,
+    p_chips_per_person: chipsPerPerson,
+    p_start_mode: startMode,
+    p_vote_visibility: voteVisibility,
+    p_votes_anonymous: votesAnonymous,
+    p_comments_anonymous_mode: commentsAnonymous,
+    p_items_anonymous: itemsAnonymous,
+    p_nickname: nickname,
+  });
 
-  if (roomError || !room) {
+  if (error || !data) {
     throw new Error("ルームの作成に失敗しました");
   }
 
-  // 作成者を参加者として登録（id のみ取得）
-  const { data: participant, error: participantError } = await supabase
-    .from("participants")
-    .insert({
-      room_id: room.id,
-      nickname,
-      is_creator: true,
-    })
-    .select("id")
-    .single();
+  const { room_id, participant_id } = data as { room_id: string; participant_id: string };
 
-  if (participantError || !participant) {
-    throw new Error("参加者の登録に失敗しました");
-  }
-
-  // 参加者IDを cookie に保存
-  await setParticipantId(room.id, participant.id);
+  // cookie保存（次のページ遷移に必要）
+  await setParticipantId(room_id, participant_id);
 
   return urlSlug;
 }
