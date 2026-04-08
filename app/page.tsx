@@ -74,6 +74,18 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* About */}
+      <section className="px-6 py-12 bg-white">
+        <div className="max-w-sm mx-auto text-center">
+          <h2 className="text-lg font-bold text-text-primary mb-3">
+            Kimette とは？
+          </h2>
+          <p className="text-[13px] text-text-secondary leading-[1.9]">
+            Kimette は、チップを配分して投票する意思決定サービスです。多数決では表現できない「どっちもいいけど、こっちがちょっといい」という微妙な気持ちの差を、チップの枚数で正確に伝えることができます。
+          </p>
+        </div>
+      </section>
+
       {/* How it works */}
       <section className="px-6 py-12 bg-bg-secondary">
         <h2 className="text-center text-lg font-bold text-text-primary mb-8">
