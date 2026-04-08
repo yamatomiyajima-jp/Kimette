@@ -35,6 +35,11 @@ const FEATURES = [
     title: "理由が見える",
     desc: "コメント機能で「なぜそれを選んだか」を共有。納得感のある結果に。",
   },
+  {
+    icon: "🔧",
+    title: "シーンに合わせて調整できる",
+    desc: "匿名投票・投票状況の公開範囲・コメントの匿名など、用途に合わせて細かく設定可能。",
+  },
 ] as const;
 
 export default function Home() {
