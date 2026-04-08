@@ -1,0 +1,243 @@
+import type { Room, Item, Participant, Vote, Comment } from "@/lib/types";
+
+interface ResultPhaseProps {
+  room: Room;
+  items: Item[];
+  participants: Participant[];
+  currentParticipant: Participant;
+  votes: Vote[];
+  comments: Comment[];
+}
+
+interface RankedItem {
+  item: Item;
+  totalChips: number;
+  rank: number;
+  itemComments: Comment[];
+  voteBreakdown: { participantName: string; chips: number }[];
+}
+
+export function ResultPhase({
+  room,
+  items,
+  participants,
+  currentParticipant,
+  votes,
+  comments,
+}: ResultPhaseProps) {
+  const voterCount = new Set(votes.map((v) => v.participant_id)).size;
+
+  // 順位を計算
+  const rankedItems = calculateRanking(
+    items,
+    votes,
+    comments,
+    participants,
+    currentParticipant.id
+  );
+
+  return (
+    <div>
+      {/* ヘッダー */}
+      <div className="text-center mb-[18px]">
+        <div className="text-[28px] leading-none mb-1.5">🏆</div>
+        <h1 className="text-[17px] font-medium text-text-primary">結果発表</h1>
+        <p className="text-[11px] text-text-secondary">
+          {room.name}・{voterCount}人が投票
+        </p>
+      </div>
+
+      {/* ランキング */}
+      {rankedItems.map((ranked) => {
+        const isWinner = ranked.rank === 1;
+
+        return (
+          <div
+            key={ranked.item.id}
+            className={`p-3 rounded-md mb-3 ${
+              isWinner
+                ? "border-2 border-border-info bg-bg-info"
+                : "border-[0.5px] border-black/15"
+            }`}
+          >
+            {/* 順位 + 商品名 */}
+            <div className="flex items-center gap-2.5 mb-2">
+              <span
+                className={`text-[11px] font-medium px-2 py-0.5 rounded-[10px] ${
+                  isWinner
+                    ? "bg-text-info text-white"
+                    : "bg-bg-secondary text-text-secondary"
+                }`}
+              >
+                {ranked.rank}位
+              </span>
+              <span
+                className={`text-[13px] font-medium ${
+                  isWinner ? "text-text-info text-sm" : ""
+                }`}
+              >
+                📦 {ranked.item.name}
+              </span>
+            </div>
+
+            {/* チップ可視化 */}
+            <div
+              className={`flex gap-1 flex-wrap min-h-5 p-1.5 rounded-md mb-2.5 ${
+                isWinner ? "bg-bg-primary" : "bg-bg-secondary"
+              }`}
+            >
+              {Array.from({ length: ranked.totalChips }, (_, i) => (
+                <div
+                  key={i}
+                  className={`w-4 h-4 rounded-full bg-text-info border border-text-info ${
+                    isWinner ? "" : "opacity-70"
+                  }`}
+                />
+              ))}
+              {ranked.totalChips === 0 && (
+                <span className="text-[11px] text-text-tertiary">
+                  チップなし
+                </span>
+              )}
+            </div>
+
+            {/* 獲得チップ数 */}
+            <div className="flex justify-between items-baseline">
+              <span
+                className={`text-[11px] ${
+                  isWinner ? "text-text-info" : "text-text-secondary"
+                }`}
+              >
+                獲得チップ
+              </span>
+              <span
+                className={`font-medium ${
+                  isWinner
+                    ? "text-lg text-text-info"
+                    : "text-base text-text-primary"
+                }`}
+              >
+                {ranked.totalChips}個
+              </span>
+            </div>
+
+            {/* コメント */}
+            <div
+              className={`border-t-[0.5px] mt-2.5 pt-2.5 ${
+                isWinner ? "border-border-info" : "border-black/15"
+              }`}
+            >
+              {ranked.itemComments.length > 0 ? (
+                <>
+                  <div
+                    className={`text-[11px] mb-1.5 ${
+                      isWinner
+                        ? "text-text-info font-medium"
+                        : "text-text-secondary"
+                    }`}
+                  >
+                    💬 コメント {ranked.itemComments.length}件
+                  </div>
+                  {ranked.itemComments.map((c) => (
+                    <div key={c.id} className="mb-1.5">
+                      <div className="text-[11px] text-text-secondary font-medium mb-0.5">
+                        {room.comments_anonymous
+                          ? "匿名"
+                          : c.participant_id === currentParticipant.id
+                            ? "あなた"
+                            : participants.find(
+                                  (p) => p.id === c.participant_id
+                                )?.nickname ?? "不明"}
+                      </div>
+                      <div className="text-xs leading-relaxed">{c.body}</div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div className="text-[11px] text-text-tertiary text-center">
+                  コメントなし
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* 投票内訳ボタン */}
+      {room.show_vote_breakdown && (
+        <VoteBreakdown rankedItems={rankedItems} />
+      )}
+    </div>
+  );
+}
+
+function VoteBreakdown({ rankedItems }: { rankedItems: RankedItem[] }) {
+  return (
+    <details className="mt-4">
+      <summary className="w-full py-2.5 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary text-center cursor-pointer list-none">
+        投票内訳を見る
+      </summary>
+      <div className="mt-2 space-y-3">
+        {rankedItems.map((ranked) => (
+          <div key={ranked.item.id} className="text-xs">
+            <div className="font-medium mb-1">📦 {ranked.item.name}</div>
+            {ranked.voteBreakdown.length > 0 ? (
+              ranked.voteBreakdown.map((v, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between text-text-secondary px-2 py-0.5"
+                >
+                  <span>{v.participantName}</span>
+                  <span>{v.chips}チップ</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-text-tertiary px-2">投票なし</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function calculateRanking(
+  items: Item[],
+  votes: Vote[],
+  comments: Comment[],
+  participants: Participant[],
+  currentParticipantId: string
+): RankedItem[] {
+  // 商品ごとの合計チップ数を計算
+  const itemScores = items.map((item) => {
+    const itemVotes = votes.filter((v) => v.item_id === item.id);
+    const totalChips = itemVotes.reduce((sum, v) => sum + v.chips, 0);
+    const itemComments = comments.filter((c) => c.item_id === item.id);
+
+    const voteBreakdown = itemVotes
+      .filter((v) => v.chips > 0)
+      .map((v) => ({
+        participantName:
+          v.participant_id === currentParticipantId
+            ? "あなた"
+            : participants.find((p) => p.id === v.participant_id)?.nickname ??
+              "不明",
+        chips: v.chips,
+      }))
+      .sort((a, b) => b.chips - a.chips);
+
+    return { item, totalChips, itemComments, voteBreakdown };
+  });
+
+  // チップ数降順でソート
+  itemScores.sort((a, b) => b.totalChips - a.totalChips);
+
+  // 同点対応の順位を付与
+  let currentRank = 1;
+  return itemScores.map((score, index) => {
+    if (index > 0 && score.totalChips < itemScores[index - 1].totalChips) {
+      currentRank = index + 1;
+    }
+    return { ...score, rank: currentRank };
+  });
+}
