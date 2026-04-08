@@ -77,7 +77,7 @@ export function ShareButton({ roomName, rankedItems, slug }: ShareButtonProps) {
           : "bg-bg-info text-text-info"
       }`}
     >
-      {copied ? "✓ コピーしました" : "📤 結果を共有する"}
+      {copied ? "✓ コピーしました" : "結果を共有する"}
     </button>
   );
 }
