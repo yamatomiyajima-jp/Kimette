@@ -1,4 +1,5 @@
 import type { Room, Item, Participant, Vote, Comment } from "@/lib/types";
+import { ShareButton } from "./share-button";
 
 interface ResultPhaseProps {
   room: Room;
@@ -200,10 +201,13 @@ export function ResultPhase({
         );
       })}
 
+      {/* 結果を共有 */}
+      <ShareButton roomName={room.name} rankedItems={rankedItems} slug={room.url_slug} />
+
       {/* 終了ボタン */}
       <a
         href="/"
-        className="block w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md text-center mt-4"
+        className="block w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md text-center mt-3"
       >
         終了してトップへ戻る
       </a>
