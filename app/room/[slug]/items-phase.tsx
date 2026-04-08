@@ -406,36 +406,46 @@ function InviteLinkButton({ slug }: { slug: string }) {
     };
   }, []);
 
-  async function handleCopy() {
+  async function handleShare() {
     const url = `${window.location.origin}/room/${slug}`;
+    const text = "Kimetteで一緒に投票しよう！";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Kimette", text, url });
+        return;
+      } catch {
+        // キャンセル時は何もしない
+      }
+      return;
+    }
+
+    // フォールバック: クリップボードにコピー
     try {
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      timerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      // フォールバック: 古いブラウザ向け
       const textarea = document.createElement("textarea");
       textarea.value = url;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setCopied(true);
-      timerRef.current = setTimeout(() => setCopied(false), 2000);
     }
+    setCopied(true);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
   }
 
   return (
     <button
       type="button"
-      onClick={handleCopy}
+      onClick={handleShare}
       className={`w-full py-2.5 text-[13px] rounded-md mb-4 font-medium transition-colors ${
         copied
           ? "bg-bg-success text-text-success"
           : "bg-bg-info text-text-info"
       }`}
     >
-      {copied ? "✓ コピーしました" : "📋 招待リンクをコピー"}
+      {copied ? "✓ コピーしました" : "招待リンクを共有"}
     </button>
   );
 }
