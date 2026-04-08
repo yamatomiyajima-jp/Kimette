@@ -139,17 +139,7 @@ export function ItemsPhase({
 
       {/* 投票開始ボタン（作成者のみ） */}
       {currentParticipant.is_creator && (
-        <form action={startVoting}>
-          <input type="hidden" name="roomId" value={room.id} />
-          <input type="hidden" name="slug" value={room.url_slug} />
-          <button
-            type="submit"
-            disabled={items.length === 0}
-            className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md disabled:opacity-40"
-          >
-            投票を開始 →
-          </button>
-        </form>
+        <StartVotingButton roomId={room.id} slug={room.url_slug} disabled={items.length === 0} />
       )}
     </div>
   );
@@ -248,13 +238,15 @@ function AddItemForm({
   itemsAnonymous: string;
   onClose: () => void;
 }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   async function handleSubmit(formData: FormData) {
-    // 楽観的更新: フォームを即座に閉じてからサーバーに送信
-    onClose();
+    setIsSubmitting(true);
     try {
       await addItem(formData);
+      onClose();
     } catch {
-      // エラー時は Realtime で自然に同期される
+      setIsSubmitting(false);
     }
   }
 
@@ -273,8 +265,9 @@ function AddItemForm({
         type="text"
         name="name"
         required
+        disabled={isSubmitting}
         placeholder="例: スタバのカード"
-        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3"
+        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 disabled:opacity-50"
       />
 
       <label className="text-[13px] text-text-secondary block mb-1.5">
@@ -283,8 +276,9 @@ function AddItemForm({
       <input
         type="url"
         name="productUrl"
+        disabled={isSubmitting}
         placeholder="https://example.com/product"
-        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3"
+        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 disabled:opacity-50"
       />
 
       <label className="text-[13px] text-text-secondary block mb-1.5">
@@ -293,8 +287,9 @@ function AddItemForm({
       <textarea
         name="description"
         rows={2}
+        disabled={isSubmitting}
         placeholder="商品の説明を追加"
-        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 resize-none"
+        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 resize-none disabled:opacity-50"
       />
 
       {/* 匿名選択可の場合のみチェックボックスを表示 */}
@@ -304,6 +299,7 @@ function AddItemForm({
             type="checkbox"
             name="isAnonymous"
             value="on"
+            disabled={isSubmitting}
             className="w-4 h-4 rounded"
           />
           匿名で登録する
@@ -314,15 +310,17 @@ function AddItemForm({
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary"
+          disabled={isSubmitting}
+          className="flex-1 py-2 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-50"
         >
           キャンセル
         </button>
         <button
           type="submit"
-          className="flex-1 py-2 text-[13px] bg-text-primary text-white rounded-md font-medium"
+          disabled={isSubmitting}
+          className="flex-1 py-2 text-[13px] bg-text-primary text-white rounded-md font-medium disabled:opacity-50"
         >
-          追加
+          {isSubmitting ? "追加しています..." : "追加"}
         </button>
       </div>
     </form>
@@ -364,6 +362,37 @@ function DeleteItemButton({
     >
       ✕
     </button>
+  );
+}
+
+function StartVotingButton({
+  roomId,
+  slug,
+  disabled,
+}: {
+  roomId: string;
+  slug: string;
+  disabled: boolean;
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true);
+    await startVoting(formData);
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input type="hidden" name="roomId" value={roomId} />
+      <input type="hidden" name="slug" value={slug} />
+      <button
+        type="submit"
+        disabled={disabled || isSubmitting}
+        className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md disabled:opacity-40"
+      >
+        {isSubmitting ? "開始しています..." : "投票を開始 →"}
+      </button>
+    </form>
   );
 }
 
@@ -422,7 +451,10 @@ function EditDescriptionForm({
   slug: string;
   onClose: () => void;
 }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true);
     await updateItem(formData);
     onClose();
   }
@@ -436,24 +468,27 @@ function EditDescriptionForm({
       <textarea
         name="description"
         rows={2}
+        disabled={isSubmitting}
         defaultValue={item.description ?? ""}
         placeholder="商品の説明を追加"
-        className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-2 resize-none"
+        className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-2 resize-none disabled:opacity-50"
       />
 
       <div className="flex gap-2">
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-1 text-[10px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary"
+          disabled={isSubmitting}
+          className="flex-1 py-1 text-[10px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-50"
         >
           キャンセル
         </button>
         <button
           type="submit"
-          className="flex-1 py-1 text-[10px] bg-text-primary text-white rounded-md font-medium"
+          disabled={isSubmitting}
+          className="flex-1 py-1 text-[10px] bg-text-primary text-white rounded-md font-medium disabled:opacity-50"
         >
-          保存
+          {isSubmitting ? "保存しています..." : "保存"}
         </button>
       </div>
     </form>

@@ -594,16 +594,7 @@ export function VotePhase({
 
       {/* 結果発表ボタン（作成者のみ、確定後に表示） */}
       {currentParticipant.is_creator && isConfirmed && (
-        <form action={closeRoom} className="mt-4">
-          <input type="hidden" name="roomId" value={room.id} />
-          <input type="hidden" name="slug" value={room.url_slug} />
-          <button
-            type="submit"
-            className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md"
-          >
-            結果を発表 →
-          </button>
-        </form>
+        <CloseRoomButton roomId={room.id} slug={room.url_slug} />
       )}
 
       {isConfirmed && (
@@ -612,6 +603,29 @@ export function VotePhase({
         </p>
       )}
     </div>
+  );
+}
+
+function CloseRoomButton({ roomId, slug }: { roomId: string; slug: string }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true);
+    await closeRoom(formData);
+  }
+
+  return (
+    <form action={handleSubmit} className="mt-4">
+      <input type="hidden" name="roomId" value={roomId} />
+      <input type="hidden" name="slug" value={slug} />
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md disabled:opacity-50"
+      >
+        {isSubmitting ? "集計しています..." : "結果を発表 →"}
+      </button>
+    </form>
   );
 }
 
