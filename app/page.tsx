@@ -56,9 +56,11 @@ export default function Home() {
             priority
           />
         </div>
-        <p className="text-[15px] text-text-secondary text-center max-w-[300px] leading-relaxed">
-          「どっちもいいけど、こっちかな」を
-          チップの配分で正確に伝えられる投票サービス
+        <p className="text-[15px] text-text-primary text-center max-w-[300px] leading-relaxed font-medium">
+          「どれでもいいよ」が、一番困る。
+        </p>
+        <p className="text-[15px] text-text-primary text-center max-w-[300px] leading-relaxed font-medium mt-0.5">
+          だから、Kimette。
         </p>
         <p className="mt-1.5 text-xs text-text-tertiary">
           アカウント不要・URL共有だけで使える
