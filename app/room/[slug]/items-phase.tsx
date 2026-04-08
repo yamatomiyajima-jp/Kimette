@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, Item, Participant } from "@/lib/types";
@@ -90,6 +90,9 @@ export function ItemsPhase({
         候補と説明を自由に追加できます
       </p>
 
+      {/* 招待リンク */}
+      <InviteLinkButton slug={room.url_slug} />
+
       {/* 商品リスト */}
       {items.map((item) => (
         <ItemCard
@@ -176,17 +179,11 @@ function ItemCard({
             </div>
           </div>
           {isOwner && (
-            <form action={deleteItem}>
-              <input type="hidden" name="itemId" value={item.id} />
-              <input type="hidden" name="roomId" value={roomId} />
-              <input type="hidden" name="slug" value={slug} />
-              <button
-                type="submit"
-                className="text-[10px] text-text-tertiary px-1"
-              >
-                ✕
-              </button>
-            </form>
+            <DeleteItemButton
+              itemId={item.id}
+              roomId={roomId}
+              slug={slug}
+            />
           )}
         </div>
 
@@ -280,6 +277,88 @@ function AddItemForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function DeleteItemButton({
+  itemId,
+  roomId,
+  slug,
+}: {
+  itemId: string;
+  roomId: string;
+  slug: string;
+}) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const formData = new FormData();
+      formData.set("itemId", itemId);
+      formData.set("roomId", roomId);
+      formData.set("slug", slug);
+      await deleteItem(formData);
+    } catch {
+      setIsDeleting(false);
+      // エラーは握りつぶして静かに失敗させる
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={isDeleting}
+      className="text-[10px] text-text-tertiary px-1 disabled:opacity-30"
+    >
+      ✕
+    </button>
+  );
+}
+
+function InviteLinkButton({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  async function handleCopy() {
+    const url = `${window.location.origin}/room/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // フォールバック: 古いブラウザ向け
+      const textarea = document.createElement("textarea");
+      textarea.value = url;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`w-full py-2.5 text-[13px] rounded-md mb-4 font-medium transition-colors ${
+        copied
+          ? "bg-bg-success text-text-success"
+          : "bg-bg-info text-text-info"
+      }`}
+    >
+      {copied ? "✓ コピーしました" : "📋 招待リンクをコピー"}
+    </button>
   );
 }
 
