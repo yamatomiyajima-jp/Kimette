@@ -21,19 +21,14 @@ const STEPS = [
 
 const FEATURES = [
   {
-    icon: "🤔",
-    title: "優柔不断でもOK",
-    desc: "「どれもいい」ならチップを均等に、「こっちかな」なら少し多めに。微妙な気持ちをそのまま反映。",
+    icon: "🎚️",
+    title: "「ちょっといい」も伝わる",
+    desc: "1票か0票かではなく、チップの枚数で気持ちの強さをそのまま表現できる。",
   },
   {
     icon: "🔗",
     title: "アカウント不要",
     desc: "URLを開いてニックネームを入れるだけ。面倒な登録は一切なし。",
-  },
-  {
-    icon: "⚖️",
-    title: "全員が平等",
-    desc: "持ちチップ数は全員同じ。声の大きさに左右されない公平な意思決定。",
   },
   {
     icon: "💬",
@@ -115,19 +110,21 @@ export default function Home() {
         <h2 className="text-center text-lg font-bold text-text-primary mb-8">
           Kimette の特徴
         </h2>
-        <div className="max-w-sm mx-auto grid grid-cols-2 gap-4">
+        <div className="max-w-sm mx-auto flex flex-col gap-3">
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="bg-bg-secondary rounded-xl p-4 text-center"
+              className="bg-bg-secondary rounded-xl p-4 flex gap-3.5 items-start"
             >
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <h3 className="font-bold text-[13px] text-text-primary mb-1">
-                {f.title}
-              </h3>
-              <p className="text-[11px] text-text-secondary leading-relaxed">
-                {f.desc}
-              </p>
+              <div className="text-2xl shrink-0 mt-0.5">{f.icon}</div>
+              <div>
+                <h3 className="font-bold text-[13px] text-text-primary mb-0.5">
+                  {f.title}
+                </h3>
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  {f.desc}
+                </p>
+              </div>
             </div>
           ))}
         </div>
