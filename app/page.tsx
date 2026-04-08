@@ -115,21 +115,19 @@ export default function Home() {
         <h2 className="text-center text-lg font-bold text-text-primary mb-8">
           Kimette の特徴
         </h2>
-        <div className="max-w-sm mx-auto flex flex-col gap-3">
+        <div className="max-w-sm mx-auto grid grid-cols-2 gap-4">
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className="bg-bg-secondary rounded-xl p-4 flex gap-3.5 items-start"
+              className="bg-bg-secondary rounded-xl p-4 text-center"
             >
-              <div className="text-2xl shrink-0 mt-0.5">{f.icon}</div>
-              <div>
-                <h3 className="font-bold text-[13px] text-text-primary mb-0.5">
-                  {f.title}
-                </h3>
-                <p className="text-[11px] text-text-secondary leading-relaxed">
-                  {f.desc}
-                </p>
-              </div>
+              <div className="text-2xl mb-2">{f.icon}</div>
+              <h3 className="font-bold text-[13px] text-text-primary mb-1">
+                {f.title}
+              </h3>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                {f.desc}
+              </p>
             </div>
           ))}
         </div>
