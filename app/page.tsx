@@ -46,35 +46,29 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-dvh">
       {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center px-6 pt-10 pb-12 bg-[#4a4a4a] overflow-hidden">
-        {/* 背景グロー効果 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#2a3a5a] via-[#4a4a4a] to-[#4a4a4a]" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-40 bg-blue-500/20 rounded-full blur-3xl" />
-
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="relative w-72 h-36 mb-4">
-            <Image
-              src="/hero.png"
-              alt="Kimette!"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <p className="text-base text-white/80 text-center max-w-xs leading-relaxed">
-            チップを配分して、みんなで決めよう
-          </p>
-          <p className="mt-1 text-xs text-white/50">
-            アカウント不要・URL共有だけで使える
-          </p>
-
-          <Link
-            href="/create"
-            className="mt-8 w-full max-w-xs block bg-white text-[#2a3a5a] py-3.5 rounded-xl font-bold text-center text-base shadow-lg shadow-black/30 active:scale-[0.98] transition-transform"
-          >
-            ルームを作成する
-          </Link>
+      <section className="flex flex-col items-center justify-center px-6 pt-10 pb-12 bg-gradient-to-b from-white to-bg-secondary">
+        <div className="relative w-72 h-36 mb-4">
+          <Image
+            src="/hero.png"
+            alt="Kimette!"
+            fill
+            className="object-contain"
+            priority
+          />
         </div>
+        <p className="text-base text-text-secondary text-center max-w-xs leading-relaxed">
+          チップを配分して、みんなで決めよう
+        </p>
+        <p className="mt-1 text-xs text-text-tertiary">
+          アカウント不要・URL共有だけで使える
+        </p>
+
+        <Link
+          href="/create"
+          className="mt-8 w-full max-w-xs block bg-text-info text-white py-3.5 rounded-xl font-medium text-center text-base shadow-lg shadow-text-info/20 active:scale-[0.98] transition-transform"
+        >
+          ルームを作成する
+        </Link>
       </section>
 
       {/* How it works */}
