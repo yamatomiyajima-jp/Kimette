@@ -8,6 +8,7 @@ import type { AnonymousMode, VoteVisibility } from "@/lib/types";
 export function CreateRoomForm() {
   const router = useRouter();
   const [voteVisibility, setVoteVisibility] = useState<VoteVisibility>("total_only");
+  const [votesAnonymous, setVotesAnonymous] = useState<AnonymousMode>("off");
   const [commentsAnonymous, setCommentsAnonymous] = useState<AnonymousMode>("off");
   const [itemsAnonymous, setItemsAnonymous] = useState<AnonymousMode>("off");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,6 +81,17 @@ export function CreateRoomForm() {
             { value: "hidden", label: "非公開" },
             { value: "total_only", label: "合計のみ" },
             { value: "detailed", label: "詳細表示" },
+          ]}
+        />
+        <SelectRow
+          label="投票の匿名"
+          name="votesAnonymous"
+          value={votesAnonymous}
+          onChange={(v) => setVotesAnonymous(v as AnonymousMode)}
+          options={[
+            { value: "off", label: "名前を表示" },
+            { value: "optional", label: "匿名を選択可" },
+            { value: "on", label: "全員匿名" },
           ]}
         />
         <SelectRow

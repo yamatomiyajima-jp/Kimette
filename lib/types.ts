@@ -16,6 +16,7 @@ export interface Room {
   start_mode: StartMode;
   voting_starts_at: string | null;
   vote_visibility: VoteVisibility;
+  votes_anonymous: AnonymousMode;
   comments_anonymous_mode: AnonymousMode;
   items_anonymous: AnonymousMode;
   created_at: string;

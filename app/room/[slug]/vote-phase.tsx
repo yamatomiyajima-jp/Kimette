@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, Item, Participant, Vote, Comment } from "@/lib/types";
 import { submitVote, closeRoom } from "./actions";
+import { ParticipantsList } from "./participants-list";
 
 interface VotePhaseProps {
   room: Room;
@@ -242,8 +243,11 @@ export function VotePhase({
           v.participant_id !== currentParticipant.id &&
           v.chips > 0
       )
-      .map((v) => ({
-        name: getParticipantName(v.participant_id),
+      .map((v, i) => ({
+        name:
+          room.votes_anonymous === "on"
+            ? `匿名${i + 1}`
+            : getParticipantName(v.participant_id),
         chips: v.chips,
       }));
 
@@ -282,7 +286,7 @@ export function VotePhase({
       {/* 参加者リスト */}
       <ParticipantsList
         participants={participants}
-        itemsAnonymous={room.items_anonymous}
+        isAnonymous={room.items_anonymous === "on"}
       />
 
       {/* 確定済みバナー */}
@@ -596,26 +600,3 @@ export function VotePhase({
   );
 }
 
-/** 参加者リスト（匿名モードの場合は人数のみ） */
-function ParticipantsList({
-  participants,
-  itemsAnonymous,
-}: {
-  participants: Participant[];
-  itemsAnonymous: string;
-}) {
-  const isAnonymous = itemsAnonymous === "on";
-
-  return (
-    <div className="bg-bg-secondary rounded-md p-2.5 mb-3">
-      <div className="text-[11px] text-text-tertiary mb-0.5">
-        参加者（{participants.length}人）
-      </div>
-      {!isAnonymous && (
-        <div className="text-[12px] text-text-secondary">
-          {participants.map((p) => p.nickname).join("、")}
-        </div>
-      )}
-    </div>
-  );
-}

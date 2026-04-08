@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, Item, Participant } from "@/lib/types";
+import { ParticipantsList } from "./participants-list";
 import { addItem, updateItem, deleteItem, startVoting } from "./actions";
 
 interface ItemsPhaseProps {
@@ -93,6 +94,12 @@ export function ItemsPhase({
       <p className="text-xs text-text-secondary mt-0 mb-[18px]">
         候補と説明を自由に追加できます
       </p>
+
+      {/* 参加者リスト */}
+      <ParticipantsList
+        participants={participants}
+        isAnonymous={room.items_anonymous === "on"}
+      />
 
       {/* 招待リンク */}
       <InviteLinkButton slug={room.url_slug} />

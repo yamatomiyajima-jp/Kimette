@@ -19,6 +19,7 @@ export async function createRoom(formData: FormData): Promise<string> {
   const chipsPerPerson = Number(formData.get("chipsPerPerson")) || 10;
   const startMode = formData.get("startMode") as string;
   const voteVisibility = (formData.get("voteVisibility") as string) || "total_only";
+  const votesAnonymous = (formData.get("votesAnonymous") as string) || "off";
   const commentsAnonymous = (formData.get("commentsAnonymous") as string) || "off";
   const itemsAnonymous = (formData.get("itemsAnonymous") as string) || "off";
 
@@ -38,6 +39,7 @@ export async function createRoom(formData: FormData): Promise<string> {
       chips_per_person: chipsPerPerson,
       start_mode: startMode,
       vote_visibility: voteVisibility,
+      votes_anonymous: votesAnonymous,
       comments_anonymous_mode: commentsAnonymous,
       items_anonymous: itemsAnonymous,
     })

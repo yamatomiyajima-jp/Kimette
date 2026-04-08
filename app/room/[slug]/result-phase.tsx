@@ -33,7 +33,8 @@ export function ResultPhase({
     votes,
     comments,
     participants,
-    currentParticipant?.id ?? ""
+    currentParticipant?.id ?? "",
+    room.votes_anonymous
   );
 
   function getCommentAuthor(c: Comment) {
@@ -207,7 +208,8 @@ function calculateRanking(
   votes: Vote[],
   comments: Comment[],
   participants: Participant[],
-  currentParticipantId: string
+  currentParticipantId: string,
+  votesAnonymous: string
 ): RankedItem[] {
   const itemScores = items.map((item) => {
     const itemVotes = votes.filter((v) => v.item_id === item.id);
@@ -216,12 +218,14 @@ function calculateRanking(
 
     const voteBreakdown = itemVotes
       .filter((v) => v.chips > 0)
-      .map((v) => ({
+      .map((v, i) => ({
         participantName:
           v.participant_id === currentParticipantId
             ? "あなた"
-            : participants.find((p) => p.id === v.participant_id)?.nickname ??
-              "不明",
+            : votesAnonymous === "on"
+              ? `匿名${i + 1}`
+              : participants.find((p) => p.id === v.participant_id)?.nickname ??
+                "不明",
         chips: v.chips,
       }))
       .sort((a, b) => b.chips - a.chips);
