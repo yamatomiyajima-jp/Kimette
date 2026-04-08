@@ -77,6 +77,7 @@ export function CreateRoomForm() {
           name="voteVisibility"
           value={voteVisibility}
           onChange={(v) => setVoteVisibility(v as VoteVisibility)}
+          info="投票期間中に他の参加者の投票状況をどこまで見せるかを設定します。「非公開」は結果発表まで非表示、「合計のみ」は商品ごとの合計チップ数のみ表示、「詳細表示」は誰が何チップ入れたかまで表示します。"
           options={[
             { value: "hidden", label: "非公開" },
             { value: "total_only", label: "合計のみ" },
@@ -88,6 +89,7 @@ export function CreateRoomForm() {
           name="votesAnonymous"
           value={votesAnonymous}
           onChange={(v) => setVotesAnonymous(v as AnonymousMode)}
+          info="結果発表時に、誰がどの商品に投票したかの名前を表示するかを設定します。「匿名を選択可」にすると、各参加者が投票時に匿名にするか選べます。"
           options={[
             { value: "off", label: "名前を表示" },
             { value: "optional", label: "匿名を選択可" },
@@ -99,6 +101,7 @@ export function CreateRoomForm() {
           name="commentsAnonymous"
           value={commentsAnonymous}
           onChange={(v) => setCommentsAnonymous(v as AnonymousMode)}
+          info="商品へのコメント投稿者の名前を表示するかを設定します。「匿名を選択可」にすると、各参加者がコメントごとに匿名にするか選べます。"
           options={[
             { value: "off", label: "名前を表示" },
             { value: "optional", label: "匿名を選択可" },
@@ -110,6 +113,7 @@ export function CreateRoomForm() {
           name="itemsAnonymous"
           value={itemsAnonymous}
           onChange={(v) => setItemsAnonymous(v as AnonymousMode)}
+          info="商品を登録した人の名前を表示するかを設定します。「匿名を選択可」にすると、登録時に匿名にするか選べます。"
           options={[
             { value: "off", label: "名前を表示" },
             { value: "optional", label: "匿名を選択可" },
@@ -135,28 +139,51 @@ function SelectRow({
   value,
   onChange,
   options,
+  info,
 }: {
   label: string;
   name: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  info?: string;
 }) {
+  const [showInfo, setShowInfo] = useState(false);
+
   return (
-    <div className="flex justify-between items-center">
-      <span className="text-[13px]">{label}</span>
-      <input type="hidden" name={name} value={value} />
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="text-[11px] font-medium px-2 py-0.5 rounded-[10px] bg-bg-info text-text-info border-0 appearance-none text-center"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+    <div>
+      <div className="flex justify-between items-center">
+        <span className="text-[13px] flex items-center gap-1">
+          {label}
+          {info && (
+            <button
+              type="button"
+              onClick={() => setShowInfo((v) => !v)}
+              className="w-4 h-4 rounded-full bg-text-tertiary/20 text-text-tertiary text-[10px] font-bold flex items-center justify-center shrink-0"
+              aria-label={`${label}の説明`}
+            >
+              ?
+            </button>
+          )}
+        </span>
+        <input type="hidden" name={name} value={value} />
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="text-[11px] font-medium px-2 py-0.5 rounded-[10px] bg-bg-info text-text-info border-0 appearance-none text-center"
+        >
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      {showInfo && info && (
+        <p className="mt-1.5 text-[11px] text-text-tertiary leading-relaxed bg-white/60 rounded-md px-2.5 py-2">
+          {info}
+        </p>
+      )}
     </div>
   );
 }
