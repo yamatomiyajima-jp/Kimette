@@ -10,7 +10,7 @@ const STEPS = [
   {
     num: "2",
     title: "チップを配る",
-    desc: "全員に同じ数のチップを配布。推しの商品にチップを自由に配分。",
+    desc: "全員に同じ数のチップを配布。「ちょっといいな」に1枚、「絶対これ！」に5枚。気持ちの強さを自由に表現。",
   },
   {
     num: "3",
@@ -21,14 +21,14 @@ const STEPS = [
 
 const FEATURES = [
   {
+    icon: "🤔",
+    title: "優柔不断でもOK",
+    desc: "「どれもいい」ならチップを均等に、「こっちかな」なら少し多めに。微妙な気持ちをそのまま反映。",
+  },
+  {
     icon: "🔗",
     title: "アカウント不要",
     desc: "URLを開いてニックネームを入れるだけ。面倒な登録は一切なし。",
-  },
-  {
-    icon: "🎯",
-    title: "熱量が伝わる",
-    desc: "チップを集中させれば「これが一番！」の気持ちがしっかり反映される。",
   },
   {
     icon: "⚖️",
@@ -56,10 +56,11 @@ export default function Home() {
             priority
           />
         </div>
-        <p className="text-base text-text-secondary text-center max-w-xs leading-relaxed">
-          チップを配分して、みんなで決めよう
+        <p className="text-[15px] text-text-secondary text-center max-w-[300px] leading-relaxed">
+          「どっちもいいけど、こっちかな」を
+          チップの配分で正確に伝えられる投票サービス
         </p>
-        <p className="mt-1 text-xs text-text-tertiary">
+        <p className="mt-1.5 text-xs text-text-tertiary">
           アカウント不要・URL共有だけで使える
         </p>
 
