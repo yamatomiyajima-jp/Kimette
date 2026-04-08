@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRoom } from "./actions";
+import type { AnonymousMode, VoteVisibility } from "@/lib/types";
 
 export function CreateRoomForm() {
   const router = useRouter();
-  const [showOthersVotes, setShowOthersVotes] = useState(true);
-  const [showVoteBreakdown, setShowVoteBreakdown] = useState(false);
-  const [commentsAnonymous, setCommentsAnonymous] = useState(false);
-  const [itemsAnonymous, setItemsAnonymous] = useState<"off" | "optional" | "on">("off");
+  const [voteVisibility, setVoteVisibility] = useState<VoteVisibility>("total_only");
+  const [commentsAnonymous, setCommentsAnonymous] = useState<AnonymousMode>("off");
+  const [itemsAnonymous, setItemsAnonymous] = useState<AnonymousMode>("off");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(formData: FormData) {
@@ -69,41 +69,41 @@ export function CreateRoomForm() {
         <option value="scheduled">期日で自動開始</option>
       </select>
 
-      {/* トグル設定 */}
-      <div className="bg-bg-secondary rounded-md p-3 mb-[18px]">
-        <ToggleRow
-          label="他人の投票状況を表示"
-          checked={showOthersVotes}
-          onChange={setShowOthersVotes}
-          name="showOthersVotes"
+      {/* 詳細設定 */}
+      <div className="bg-bg-secondary rounded-md p-3 mb-[18px] space-y-3">
+        <SelectRow
+          label="投票状況の公開"
+          name="voteVisibility"
+          value={voteVisibility}
+          onChange={(v) => setVoteVisibility(v as VoteVisibility)}
+          options={[
+            { value: "hidden", label: "非公開" },
+            { value: "total_only", label: "合計のみ" },
+            { value: "detailed", label: "詳細表示" },
+          ]}
         />
-        <ToggleRow
-          label="結果に投票内訳を表示"
-          checked={showVoteBreakdown}
-          onChange={setShowVoteBreakdown}
-          name="showVoteBreakdown"
-        />
-        <ToggleRow
-          label="コメントを匿名にする"
-          checked={commentsAnonymous}
-          onChange={setCommentsAnonymous}
+        <SelectRow
+          label="コメントの匿名"
           name="commentsAnonymous"
+          value={commentsAnonymous}
+          onChange={(v) => setCommentsAnonymous(v as AnonymousMode)}
+          options={[
+            { value: "off", label: "名前を表示" },
+            { value: "optional", label: "匿名を選択可" },
+            { value: "on", label: "全員匿名" },
+          ]}
         />
-        <div className="mt-2.5">
-          <div className="flex justify-between items-center">
-            <span className="text-[13px]">商品登録者の表示</span>
-            <input type="hidden" name="itemsAnonymous" value={itemsAnonymous} />
-            <select
-              value={itemsAnonymous}
-              onChange={(e) => setItemsAnonymous(e.target.value as "off" | "optional" | "on")}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-[10px] bg-bg-info text-text-info border-0 appearance-none text-center"
-            >
-              <option value="off">名前を表示</option>
-              <option value="optional">匿名を選択可</option>
-              <option value="on">全員匿名</option>
-            </select>
-          </div>
-        </div>
+        <SelectRow
+          label="商品登録者の表示"
+          name="itemsAnonymous"
+          value={itemsAnonymous}
+          onChange={(v) => setItemsAnonymous(v as AnonymousMode)}
+          options={[
+            { value: "off", label: "名前を表示" },
+            { value: "optional", label: "匿名を選択可" },
+            { value: "on", label: "全員匿名" },
+          ]}
+        />
       </div>
 
       <button
@@ -117,36 +117,34 @@ export function CreateRoomForm() {
   );
 }
 
-function ToggleRow({
+function SelectRow({
   label,
-  checked,
-  onChange,
   name,
-  isLast = false,
+  value,
+  onChange,
+  options,
 }: {
   label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
   name: string;
-  isLast?: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
 }) {
   return (
-    <div
-      className={`flex justify-between items-center ${isLast ? "" : "mb-2.5"}`}
-    >
+    <div className="flex justify-between items-center">
       <span className="text-[13px]">{label}</span>
-      <input type="hidden" name={name} value={checked ? "on" : "off"} />
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={`text-[11px] font-medium px-2.5 py-0.5 rounded-[10px] ${
-          checked
-            ? "bg-bg-info text-text-info"
-            : "bg-bg-secondary text-text-secondary border-[0.5px] border-black/15"
-        }`}
+      <input type="hidden" name={name} value={value} />
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="text-[11px] font-medium px-2 py-0.5 rounded-[10px] bg-bg-info text-text-info border-0 appearance-none text-center"
       >
-        {checked ? "ON" : "OFF"}
-      </button>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

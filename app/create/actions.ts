@@ -18,9 +18,8 @@ export async function createRoom(formData: FormData): Promise<string> {
   const roomName = (formData.get("roomName") as string)?.trim();
   const chipsPerPerson = Number(formData.get("chipsPerPerson")) || 10;
   const startMode = formData.get("startMode") as string;
-  const showOthersVotes = formData.get("showOthersVotes") === "on";
-  const showVoteBreakdown = formData.get("showVoteBreakdown") === "on";
-  const commentsAnonymous = formData.get("commentsAnonymous") === "on";
+  const voteVisibility = (formData.get("voteVisibility") as string) || "total_only";
+  const commentsAnonymous = (formData.get("commentsAnonymous") as string) || "off";
   const itemsAnonymous = (formData.get("itemsAnonymous") as string) || "off";
 
   if (!nickname || !roomName) {
@@ -38,9 +37,8 @@ export async function createRoom(formData: FormData): Promise<string> {
       url_slug: urlSlug,
       chips_per_person: chipsPerPerson,
       start_mode: startMode,
-      show_others_votes: showOthersVotes,
-      show_vote_breakdown: showVoteBreakdown,
-      comments_anonymous: commentsAnonymous,
+      vote_visibility: voteVisibility,
+      comments_anonymous_mode: commentsAnonymous,
       items_anonymous: itemsAnonymous,
     })
     .select()

@@ -64,7 +64,25 @@ export function VotePhase({
     }
   );
 
+  // コメント入力欄の開閉状態（既にコメントがある場合は開いた状態で初期化）
+  const [commentOpen, setCommentOpen] = useState<Set<string>>(() => {
+    const set = new Set<string>();
+    for (const item of items) {
+      const existing = initialComments.find(
+        (c) =>
+          c.participant_id === currentParticipant.id && c.item_id === item.id
+      );
+      if (existing?.body) set.add(item.id);
+    }
+    return set;
+  });
+
+  // 匿名コメントのチェック状態
+  const [anonymousComment, setAnonymousComment] = useState<Set<string>>(new Set());
+
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  // 投票詳細の開閉
+  const [voteDetailOpen, setVoteDetailOpen] = useState<Set<string>>(new Set());
 
   const usedChips = Object.values(localChips).reduce(
     (sum, c) => sum + c,
@@ -104,7 +122,7 @@ export function VotePhase({
     };
   }, [room.id, router]);
 
-  // サーバーからの props 更新を反映（他人の投票・コメント）
+  // サーバーからの props 更新を反映
   useEffect(() => {
     setServerVotes(initialVotes);
   }, [initialVotes]);
@@ -130,7 +148,6 @@ export function VotePhase({
     if (delta > 0 && remainingChips <= 0) return;
 
     setLocalChips((prev) => ({ ...prev, [itemId]: next }));
-    // 確定解除（再編集モードに戻す）
     setIsConfirmed(false);
   }
 
@@ -148,9 +165,9 @@ export function VotePhase({
       .map((item) => ({
         itemId: item.id,
         body: (localComments[item.id] ?? "").trim(),
+        isAnonymous: anonymousComment.has(item.id),
       }))
       .filter((e) => {
-        // 既存コメントがあるか、新規入力がある場合のみ送信
         const hadComment = initialComments.some(
           (c) =>
             c.participant_id === currentParticipant.id &&
@@ -172,23 +189,70 @@ export function VotePhase({
   function toggleExpand(itemId: string) {
     setExpandedItems((prev) => {
       const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
-      } else {
-        next.add(itemId);
-      }
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
       return next;
     });
   }
 
-  // 他人の合計チップ（自分除外）
-  function getOthersTotal(itemId: string) {
-    return serverVotes
+  function toggleCommentOpen(itemId: string) {
+    setCommentOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  }
+
+  function toggleVoteDetail(itemId: string) {
+    setVoteDetailOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  }
+
+  function toggleAnonymousComment(itemId: string) {
+    setAnonymousComment((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  }
+
+  // 全員の合計チップ（自分含む）
+  function getAllTotal(itemId: string) {
+    const othersTotal = serverVotes
       .filter(
         (v) =>
           v.item_id === itemId && v.participant_id !== currentParticipant.id
       )
       .reduce((sum, v) => sum + v.chips, 0);
+    return othersTotal + (localChips[itemId] ?? 0);
+  }
+
+  // 投票の詳細内訳（自分の分はローカルの値を使用）
+  function getVoteBreakdown(itemId: string) {
+    const others = serverVotes
+      .filter(
+        (v) =>
+          v.item_id === itemId &&
+          v.participant_id !== currentParticipant.id &&
+          v.chips > 0
+      )
+      .map((v) => ({
+        name: getParticipantName(v.participant_id),
+        chips: v.chips,
+      }));
+
+    const myChips = localChips[itemId] ?? 0;
+    if (myChips > 0) {
+      others.push({ name: "あなた", chips: myChips });
+    }
+
+    return others.sort((a, b) => b.chips - a.chips);
   }
 
   // 他人のコメント
@@ -197,6 +261,15 @@ export function VotePhase({
       (c) =>
         c.item_id === itemId && c.participant_id !== currentParticipant.id
     );
+  }
+
+  // コメント名表示（コメントの匿名設定対応）
+  function getCommentAuthor(comment: Comment) {
+    if (room.comments_anonymous_mode === "on") return "匿名";
+    // optional の場合、コメントの is_anonymous フラグで判定（将来対応）
+    // 現状は名前表示
+    if (comment.participant_id === currentParticipant.id) return "あなた";
+    return getParticipantName(comment.participant_id);
   }
 
   return (
@@ -253,9 +326,11 @@ export function VotePhase({
       {/* 商品ごとの投票カード */}
       {items.map((item) => {
         const myChips = localChips[item.id] ?? 0;
-        const othersTotal = getOthersTotal(item.id);
+        const allTotal = getAllTotal(item.id);
         const othersComments = getOthersComments(item.id);
         const isExpanded = expandedItems.has(item.id);
+        const isCommentOpen = commentOpen.has(item.id);
+        const isVoteDetailOpen = voteDetailOpen.has(item.id);
 
         return (
           <div
@@ -318,10 +393,37 @@ export function VotePhase({
               </div>
             )}
 
-            {/* 他人の投票状況 */}
-            {room.show_others_votes && (othersTotal > 0 || myChips > 0) && (
-              <div className="mt-2 text-[11px] text-text-tertiary">
-                合計 {othersTotal + myChips} チップ
+            {/* 投票状況: 3モード対応 */}
+            {room.vote_visibility !== "hidden" && allTotal > 0 && (
+              <div className="mt-2">
+                {room.vote_visibility === "detailed" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => toggleVoteDetail(item.id)}
+                      className="text-[11px] text-text-tertiary cursor-pointer"
+                    >
+                      合計 {allTotal} チップ {isVoteDetailOpen ? "▲" : "▼"}
+                    </button>
+                    {isVoteDetailOpen && (
+                      <div className="mt-1 pl-2 border-l-2 border-black/10">
+                        {getVoteBreakdown(item.id).map((v, i) => (
+                          <div
+                            key={i}
+                            className="flex justify-between text-[11px] text-text-secondary py-0.5"
+                          >
+                            <span>{v.name}</span>
+                            <span>{v.chips}チップ</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-[11px] text-text-tertiary">
+                    合計 {allTotal} チップ
+                  </div>
+                )}
               </div>
             )}
 
@@ -365,9 +467,7 @@ export function VotePhase({
                 {othersComments.map((c) => (
                   <div key={c.id} className="mb-1.5">
                     <span className="text-[11px] font-medium">
-                      {room.comments_anonymous
-                        ? "匿名"
-                        : getParticipantName(c.participant_id)}
+                      {getCommentAuthor(c)}
                     </span>
                     <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
                       {c.body}
@@ -377,18 +477,49 @@ export function VotePhase({
               </div>
             )}
 
-            {/* 自分のコメント入力（確定前のみ） */}
+            {/* コメント入力（デフォルト閉じ、確定前のみ） */}
             {!isConfirmed && (
               <div className="mt-2">
-                <textarea
-                  value={localComments[item.id] ?? ""}
-                  onChange={(e) =>
-                    handleCommentChange(item.id, e.target.value)
-                  }
-                  rows={2}
-                  placeholder="コメントを入力（任意）"
-                  className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary resize-none"
-                />
+                {isCommentOpen ? (
+                  <div>
+                    <textarea
+                      value={localComments[item.id] ?? ""}
+                      onChange={(e) =>
+                        handleCommentChange(item.id, e.target.value)
+                      }
+                      rows={2}
+                      placeholder="コメントを入力（任意）"
+                      className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary resize-none"
+                    />
+                    {/* 匿名選択可の場合 */}
+                    {room.comments_anonymous_mode === "optional" && (
+                      <label className="flex items-center gap-1.5 mt-1 text-[11px] text-text-tertiary cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={anonymousComment.has(item.id)}
+                          onChange={() => toggleAnonymousComment(item.id)}
+                          className="w-3.5 h-3.5 rounded"
+                        />
+                        匿名でコメント
+                      </label>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => toggleCommentOpen(item.id)}
+                      className="mt-1 text-[10px] text-text-tertiary"
+                    >
+                      閉じる
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => toggleCommentOpen(item.id)}
+                    className="text-[11px] text-text-info"
+                  >
+                    💬 コメントを書く
+                  </button>
+                )}
               </div>
             )}
 

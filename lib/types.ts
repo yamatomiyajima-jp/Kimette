@@ -4,7 +4,8 @@
 
 export type RoomPhase = "registration" | "voting" | "closed";
 export type StartMode = "manual" | "scheduled";
-export type ItemsAnonymous = "off" | "optional" | "on";
+export type AnonymousMode = "off" | "optional" | "on";
+export type VoteVisibility = "hidden" | "total_only" | "detailed";
 
 export interface Room {
   id: string;
@@ -14,10 +15,9 @@ export interface Room {
   phase: RoomPhase;
   start_mode: StartMode;
   voting_starts_at: string | null;
-  show_others_votes: boolean;
-  show_vote_breakdown: boolean;
-  comments_anonymous: boolean;
-  items_anonymous: ItemsAnonymous;
+  vote_visibility: VoteVisibility;
+  comments_anonymous_mode: AnonymousMode;
+  items_anonymous: AnonymousMode;
   created_at: string;
   deleted_at: string | null;
 }

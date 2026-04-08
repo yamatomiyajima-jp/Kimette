@@ -36,6 +36,16 @@ export function ResultPhase({
     currentParticipant?.id ?? ""
   );
 
+  function getCommentAuthor(c: Comment) {
+    if (room.comments_anonymous_mode === "on") return "匿名";
+    // optional モードでは将来的に is_anonymous フラグ対応
+    if (currentParticipant && c.participant_id === currentParticipant.id)
+      return "あなた";
+    return (
+      participants.find((p) => p.id === c.participant_id)?.nickname ?? "不明"
+    );
+  }
+
   return (
     <div>
       {/* ヘッダー */}
@@ -133,6 +143,27 @@ export function ResultPhase({
               </span>
             </div>
 
+            {/* 投票内訳（detailed モードのみ、カード内に表示） */}
+            {room.vote_visibility === "detailed" &&
+              ranked.voteBreakdown.length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-[11px] text-text-tertiary cursor-pointer">
+                    投票内訳を見る
+                  </summary>
+                  <div className="mt-1 pl-2 border-l-2 border-black/10">
+                    {ranked.voteBreakdown.map((v, i) => (
+                      <div
+                        key={i}
+                        className="flex justify-between text-[11px] text-text-secondary py-0.5"
+                      >
+                        <span>{v.participantName}</span>
+                        <span>{v.chips}チップ</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
             {/* コメント */}
             <div
               className={`border-t-[0.5px] mt-2.5 pt-2.5 ${
@@ -153,13 +184,7 @@ export function ResultPhase({
                   {ranked.itemComments.map((c) => (
                     <div key={c.id} className="mb-1.5">
                       <div className="text-[11px] text-text-secondary font-medium mb-0.5">
-                        {room.comments_anonymous
-                          ? "匿名"
-                          : currentParticipant && c.participant_id === currentParticipant.id
-                            ? "あなた"
-                            : participants.find(
-                                  (p) => p.id === c.participant_id
-                                )?.nickname ?? "不明"}
+                        {getCommentAuthor(c)}
                       </div>
                       <div className="text-xs leading-relaxed">{c.body}</div>
                     </div>
@@ -174,56 +199,7 @@ export function ResultPhase({
           </div>
         );
       })}
-
-      {/* 投票内訳ボタン */}
-      {room.show_vote_breakdown && (
-        <VoteBreakdown rankedItems={rankedItems} />
-      )}
     </div>
-  );
-}
-
-function VoteBreakdown({ rankedItems }: { rankedItems: RankedItem[] }) {
-  return (
-    <details className="mt-4">
-      <summary className="w-full py-2.5 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary text-center cursor-pointer list-none">
-        投票内訳を見る
-      </summary>
-      <div className="mt-2 space-y-3">
-        {rankedItems.map((ranked) => (
-          <div key={ranked.item.id} className="text-xs">
-            <div className="font-medium mb-1">
-              📦{" "}
-              {ranked.item.product_url ? (
-                <a
-                  href={ranked.item.product_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-text-info underline"
-                >
-                  {ranked.item.name}
-                </a>
-              ) : (
-                ranked.item.name
-              )}
-            </div>
-            {ranked.voteBreakdown.length > 0 ? (
-              ranked.voteBreakdown.map((v, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between text-text-secondary px-2 py-0.5"
-                >
-                  <span>{v.participantName}</span>
-                  <span>{v.chips}チップ</span>
-                </div>
-              ))
-            ) : (
-              <div className="text-text-tertiary px-2">投票なし</div>
-            )}
-          </div>
-        ))}
-      </div>
-    </details>
   );
 }
 
@@ -234,7 +210,6 @@ function calculateRanking(
   participants: Participant[],
   currentParticipantId: string
 ): RankedItem[] {
-  // 商品ごとの合計チップ数を計算
   const itemScores = items.map((item) => {
     const itemVotes = votes.filter((v) => v.item_id === item.id);
     const totalChips = itemVotes.reduce((sum, v) => sum + v.chips, 0);
@@ -255,10 +230,8 @@ function calculateRanking(
     return { item, totalChips, itemComments, voteBreakdown };
   });
 
-  // チップ数降順でソート
   itemScores.sort((a, b) => b.totalChips - a.totalChips);
 
-  // 同点対応の順位を付与
   let currentRank = 1;
   return itemScores.map((score, index) => {
     if (index > 0 && score.totalChips < itemScores[index - 1].totalChips) {
