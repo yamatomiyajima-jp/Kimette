@@ -199,6 +199,14 @@ export function ResultPhase({
           </div>
         );
       })}
+
+      {/* 終了ボタン */}
+      <a
+        href="/"
+        className="block w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md text-center mt-4"
+      >
+        終了してトップへ戻る
+      </a>
     </div>
   );
 }
