@@ -39,7 +39,7 @@ export function ResultPhase({
 
   function getCommentAuthor(c: Comment) {
     if (room.comments_anonymous_mode === "on") return "匿名";
-    // optional モードでは将来的に is_anonymous フラグ対応
+    if (c.is_anonymous) return "匿名";
     if (currentParticipant && c.participant_id === currentParticipant.id)
       return "あなた";
     return (
@@ -222,7 +222,7 @@ function calculateRanking(
         participantName:
           v.participant_id === currentParticipantId
             ? "あなた"
-            : votesAnonymous === "on"
+            : votesAnonymous === "on" || v.is_anonymous
               ? `匿名${i + 1}`
               : participants.find((p) => p.id === v.participant_id)?.nickname ??
                 "不明",

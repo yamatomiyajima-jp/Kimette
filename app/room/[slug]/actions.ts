@@ -173,7 +173,8 @@ export async function submitVote(
   roomId: string,
   slug: string,
   chipAllocations: { itemId: string; chips: number }[],
-  commentEntries: { itemId: string; body: string }[]
+  commentEntries: { itemId: string; body: string; isAnonymous: boolean }[],
+  voteAnonymous: boolean
 ) {
   const participantId = await getParticipantId(roomId);
   if (!participantId) {
@@ -188,6 +189,7 @@ export async function submitVote(
     participant_id: participantId,
     item_id: itemId,
     chips,
+    is_anonymous: voteAnonymous,
     updated_at: now,
   }));
 
@@ -202,7 +204,7 @@ export async function submitVote(
   }
 
   // コメントを一括 UPSERT / DELETE
-  for (const { itemId, body } of commentEntries) {
+  for (const { itemId, body, isAnonymous } of commentEntries) {
     if (!body) {
       await supabase
         .from("comments")
@@ -217,6 +219,7 @@ export async function submitVote(
             participant_id: participantId,
             item_id: itemId,
             body,
+            is_anonymous: isAnonymous,
             updated_at: now,
           },
           { onConflict: "participant_id,item_id" }

@@ -48,6 +48,7 @@ export interface Vote {
   participant_id: string;
   item_id: string;
   chips: number;
+  is_anonymous: boolean;
   updated_at: string;
 }
 
@@ -56,6 +57,7 @@ export interface Comment {
   participant_id: string;
   item_id: string;
   body: string;
+  is_anonymous: boolean;
   created_at: string;
   updated_at: string;
 }

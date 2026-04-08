@@ -74,6 +74,7 @@ export function VotePhase({
   });
 
   const [anonymousComment, setAnonymousComment] = useState<Set<string>>(new Set());
+  const [anonymousVote, setAnonymousVote] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [voteDetailOpen, setVoteDetailOpen] = useState<Set<string>>(new Set());
 
@@ -180,7 +181,7 @@ export function VotePhase({
       });
 
     startTransition(async () => {
-      await submitVote(room.id, room.url_slug, chipAllocations, commentEntries);
+      await submitVote(room.id, room.url_slug, chipAllocations, commentEntries, anonymousVote);
       setIsConfirmed(true);
     });
   }
@@ -245,7 +246,7 @@ export function VotePhase({
       )
       .map((v, i) => ({
         name:
-          room.votes_anonymous === "on"
+          room.votes_anonymous === "on" || v.is_anonymous
             ? `匿名${i + 1}`
             : getParticipantName(v.participant_id),
         chips: v.chips,
@@ -267,6 +268,7 @@ export function VotePhase({
 
   function getCommentAuthor(comment: Comment) {
     if (room.comments_anonymous_mode === "on") return "匿名";
+    if (comment.is_anonymous) return "匿名";
     if (comment.participant_id === currentParticipant.id) return "あなた";
     return getParticipantName(comment.participant_id);
   }
@@ -327,6 +329,19 @@ export function VotePhase({
           ))}
         </div>
       </div>
+
+      {/* 匿名投票チェックボックス（optional モード時） */}
+      {room.votes_anonymous === "optional" && !isConfirmed && (
+        <label className="flex items-center gap-2 text-[13px] text-text-secondary mb-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={anonymousVote}
+            onChange={() => setAnonymousVote((v) => !v)}
+            className="w-4 h-4 rounded"
+          />
+          匿名で投票する
+        </label>
+      )}
 
       {/* 商品ごとの投票カード */}
       {items.map((item) => {
