@@ -27,16 +27,13 @@ export function VotePhase({
   const [isPending, startTransition] = useTransition();
   const [isConfirmed, setIsConfirmed] = useState(false);
 
-  // サーバーから来た他人の投票・コメント
   const [serverVotes, setServerVotes] = useState(initialVotes);
   const [serverComments, setServerComments] = useState(initialComments);
 
-  // 自分が既に投票済みかどうか
   const hasPreviousVotes = initialVotes.some(
     (v) => v.participant_id === currentParticipant.id && v.chips > 0
   );
 
-  // ローカル編集用: チップ配分
   const [localChips, setLocalChips] = useState<Record<string, number>>(() => {
     const map: Record<string, number> = {};
     for (const item of items) {
@@ -49,7 +46,6 @@ export function VotePhase({
     return map;
   });
 
-  // ローカル編集用: コメント
   const [localComments, setLocalComments] = useState<Record<string, string>>(
     () => {
       const map: Record<string, string> = {};
@@ -64,7 +60,6 @@ export function VotePhase({
     }
   );
 
-  // コメント入力欄の開閉状態（既にコメントがある場合は開いた状態で初期化）
   const [commentOpen, setCommentOpen] = useState<Set<string>>(() => {
     const set = new Set<string>();
     for (const item of items) {
@@ -77,17 +72,11 @@ export function VotePhase({
     return set;
   });
 
-  // 匿名コメントのチェック状態
   const [anonymousComment, setAnonymousComment] = useState<Set<string>>(new Set());
-
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  // 投票詳細の開閉
   const [voteDetailOpen, setVoteDetailOpen] = useState<Set<string>>(new Set());
 
-  const usedChips = Object.values(localChips).reduce(
-    (sum, c) => sum + c,
-    0
-  );
+  const usedChips = Object.values(localChips).reduce((sum, c) => sum + c, 0);
   const remainingChips = room.chips_per_person - usedChips;
 
   // Realtime 購読
@@ -122,7 +111,6 @@ export function VotePhase({
     };
   }, [room.id, router]);
 
-  // サーバーからの props 更新を反映
   useEffect(() => {
     setServerVotes(initialVotes);
   }, [initialVotes]);
@@ -146,8 +134,22 @@ export function VotePhase({
     const next = current + delta;
     if (next < 0) return;
     if (delta > 0 && remainingChips <= 0) return;
-
     setLocalChips((prev) => ({ ...prev, [itemId]: next }));
+    setIsConfirmed(false);
+  }
+
+  // チップ可視化をクリックして指定数に設定
+  function handleChipClick(itemId: string, targetChips: number) {
+    const current = localChips[itemId] ?? 0;
+    const diff = targetChips - current;
+
+    // 増やす場合: 残りチップが足りるか確認
+    if (diff > 0 && diff > remainingChips) {
+      // 足りない場合は残り全部を使う
+      setLocalChips((prev) => ({ ...prev, [itemId]: current + remainingChips }));
+    } else {
+      setLocalChips((prev) => ({ ...prev, [itemId]: targetChips }));
+    }
     setIsConfirmed(false);
   }
 
@@ -222,7 +224,6 @@ export function VotePhase({
     });
   }
 
-  // 全員の合計チップ（自分含む）
   function getAllTotal(itemId: string) {
     const othersTotal = serverVotes
       .filter(
@@ -233,7 +234,6 @@ export function VotePhase({
     return othersTotal + (localChips[itemId] ?? 0);
   }
 
-  // 投票の詳細内訳（自分の分はローカルの値を使用）
   function getVoteBreakdown(itemId: string) {
     const others = serverVotes
       .filter(
@@ -251,11 +251,9 @@ export function VotePhase({
     if (myChips > 0) {
       others.push({ name: "あなた", chips: myChips });
     }
-
     return others.sort((a, b) => b.chips - a.chips);
   }
 
-  // 他人のコメント
   function getOthersComments(itemId: string) {
     return serverComments.filter(
       (c) =>
@@ -263,11 +261,8 @@ export function VotePhase({
     );
   }
 
-  // コメント名表示（コメントの匿名設定対応）
   function getCommentAuthor(comment: Comment) {
     if (room.comments_anonymous_mode === "on") return "匿名";
-    // optional の場合、コメントの is_anonymous フラグで判定（将来対応）
-    // 現状は名前表示
     if (comment.participant_id === currentParticipant.id) return "あなた";
     return getParticipantName(comment.participant_id);
   }
@@ -283,6 +278,12 @@ export function VotePhase({
           投票中
         </span>
       </div>
+
+      {/* 参加者リスト */}
+      <ParticipantsList
+        participants={participants}
+        itemsAnonymous={room.items_anonymous}
+      />
 
       {/* 確定済みバナー */}
       {isConfirmed && (
@@ -340,7 +341,6 @@ export function VotePhase({
             {/* 商品名 + チップ数 */}
             <div className="flex justify-between items-center mb-2">
               <span className="text-[13px] font-medium">
-                📦{" "}
                 {item.product_url ? (
                   <a
                     href={item.product_url}
@@ -359,36 +359,50 @@ export function VotePhase({
               </span>
             </div>
 
-            {/* チップ可視化 */}
+            {/* チップ可視化（クリックで指定数に設定） */}
             <div className="flex gap-1 flex-wrap min-h-5 p-1.5 bg-bg-secondary rounded-md mb-2.5">
-              {Array.from({ length: room.chips_per_person }, (_, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-4 rounded-full bg-text-info border border-text-info ${
-                    i < myChips ? "" : "opacity-15"
-                  }`}
-                />
-              ))}
+              {Array.from({ length: room.chips_per_person }, (_, i) => {
+                const chipNumber = i + 1;
+                const isFilled = i < myChips;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={isConfirmed}
+                    onClick={() => {
+                      // 同じ位置をクリック → 0にリセット、それ以外 → その数に設定
+                      if (chipNumber === myChips) {
+                        handleChipClick(item.id, 0);
+                      } else {
+                        handleChipClick(item.id, chipNumber);
+                      }
+                    }}
+                    className={`w-4 h-4 rounded-full border border-text-info transition-colors ${
+                      isFilled ? "bg-text-info" : "bg-text-info opacity-15"
+                    } ${isConfirmed ? "" : "cursor-pointer hover:opacity-80"}`}
+                  />
+                );
+              })}
             </div>
 
-            {/* +/- ボタン（確定後は無効化） */}
+            {/* +/- ボタン（確定後は非表示） */}
             {!isConfirmed && (
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => handleChipChange(item.id, -1)}
                   disabled={myChips <= 0}
-                  className="flex-1 py-2 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-30"
+                  className="flex-1 py-2 text-[15px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-30"
                 >
-                  − 戻す
+                  −
                 </button>
                 <button
                   type="button"
                   onClick={() => handleChipChange(item.id, 1)}
                   disabled={remainingChips <= 0}
-                  className="flex-1 py-2 text-[13px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-30"
+                  className="flex-1 py-2 text-[15px] bg-bg-primary border-[0.5px] border-black/30 rounded-md text-text-primary disabled:opacity-30"
                 >
-                  + 投じる
+                  +
                 </button>
               </div>
             )}
@@ -433,7 +447,7 @@ export function VotePhase({
                 {isExpanded ? (
                   <div className="mt-2 p-2 bg-bg-secondary rounded-md">
                     <div className="text-[11px] text-text-tertiary mb-1">
-                      📝 説明
+                      説明
                     </div>
                     <div className="text-xs leading-relaxed">
                       {item.description}
@@ -452,7 +466,7 @@ export function VotePhase({
                     onClick={() => toggleExpand(item.id)}
                     className="mt-2 text-[11px] text-text-info"
                   >
-                    📝 説明を見る
+                    説明を見る
                   </button>
                 )}
               </>
@@ -462,7 +476,7 @@ export function VotePhase({
             {othersComments.length > 0 && (
               <div className="mt-2 border-t-[0.5px] border-black/10 pt-2">
                 <div className="text-[11px] text-text-tertiary mb-1">
-                  💬 コメント {othersComments.length}件
+                  コメント {othersComments.length}件
                 </div>
                 {othersComments.map((c) => (
                   <div key={c.id} className="mb-1.5">
@@ -491,7 +505,6 @@ export function VotePhase({
                       placeholder="コメントを入力（任意）"
                       className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary resize-none"
                     />
-                    {/* 匿名選択可の場合 */}
                     {room.comments_anonymous_mode === "optional" && (
                       <label className="flex items-center gap-1.5 mt-1 text-[11px] text-text-tertiary cursor-pointer">
                         <input
@@ -517,7 +530,7 @@ export function VotePhase({
                     onClick={() => toggleCommentOpen(item.id)}
                     className="text-[11px] text-text-info"
                   >
-                    💬 コメントを書く
+                    コメントを書く
                   </button>
                 )}
               </div>
@@ -578,6 +591,30 @@ export function VotePhase({
         <p className="text-[11px] text-text-tertiary text-center mt-2.5">
           投票期間中はいつでも変更できます
         </p>
+      )}
+    </div>
+  );
+}
+
+/** 参加者リスト（匿名モードの場合は人数のみ） */
+function ParticipantsList({
+  participants,
+  itemsAnonymous,
+}: {
+  participants: Participant[];
+  itemsAnonymous: string;
+}) {
+  const isAnonymous = itemsAnonymous === "on";
+
+  return (
+    <div className="bg-bg-secondary rounded-md p-2.5 mb-3">
+      <div className="text-[11px] text-text-tertiary mb-0.5">
+        参加者（{participants.length}人）
+      </div>
+      {!isAnonymous && (
+        <div className="text-[12px] text-text-secondary">
+          {participants.map((p) => p.nickname).join("、")}
+        </div>
       )}
     </div>
   );

@@ -86,7 +86,6 @@ export function ResultPhase({
                   isWinner ? "text-text-info text-sm" : ""
                 }`}
               >
-                📦{" "}
                 {ranked.item.product_url ? (
                   <a
                     href={ranked.item.product_url}

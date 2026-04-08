@@ -168,13 +168,7 @@ function ItemCard({
   slug: string;
 }) {
   return (
-    <div className="flex gap-2.5 p-2.5 border-[0.5px] border-black/15 rounded-md mb-2">
-      {/* サムネイル */}
-      <div className="w-11 h-11 bg-bg-secondary rounded-md shrink-0 flex items-center justify-center text-xl">
-        📦
-      </div>
-
-      {/* 情報 */}
+    <div className="p-2.5 border-[0.5px] border-black/15 rounded-md mb-2">
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-1">
           <div>
