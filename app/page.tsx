@@ -23,22 +23,22 @@ const FEATURES = [
   {
     icon: "🎚️",
     title: "「ちょっといい」も伝わる",
-    desc: "1票か0票かではなく、チップの枚数で気持ちの強さをそのまま表現できる。",
+    desc: "1票か0票かではなく、\nチップの枚数で気持ちの強さを\nそのまま表現できる。",
   },
   {
     icon: "🔗",
     title: "アカウント不要",
-    desc: "URLを開いてニックネームを入れるだけ。面倒な登録は一切なし。",
+    desc: "URLを開いてニックネームを\n入れるだけ。\n面倒な登録は一切不要。",
   },
   {
     icon: "💬",
     title: "理由が見える",
-    desc: "コメント機能で「なぜそれを選んだか」を共有。納得感のある結果に。",
+    desc: "コメント機能で\n「なぜそれを選んだか」を共有。",
   },
   {
     icon: "🔧",
     title: "シーンに合わせて調整できる",
-    desc: "匿名投票・投票状況の公開範囲・コメントの匿名など、用途に合わせて細かく設定可能。",
+    desc: "匿名投票・投票状況の公開範囲・\nコメントの匿名など、\n用途に合わせて細かく設定可能。",
   },
 ] as const;
 
@@ -125,7 +125,7 @@ export default function Home() {
               <h3 className="font-bold text-[13px] text-text-primary mb-1">
                 {f.title}
               </h3>
-              <p className="text-[11px] text-text-secondary leading-relaxed">
+              <p className="text-[11px] text-text-secondary leading-relaxed whitespace-pre-line">
                 {f.desc}
               </p>
             </div>
