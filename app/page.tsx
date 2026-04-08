@@ -22,7 +22,7 @@ const STEPS = [
 const FEATURES = [
   {
     icon: "🎚️",
-    title: "「ちょっといい」も伝わる",
+    title: "「ちょっといい」\nも伝わる",
     desc: "1票か0票かではなく、チップの枚数で気持ちの強さをそのまま表現できる。",
   },
   {
@@ -122,7 +122,7 @@ export default function Home() {
               className="bg-bg-secondary rounded-xl p-4 text-center"
             >
               <div className="text-2xl mb-2">{f.icon}</div>
-              <h3 className="font-bold text-[13px] text-text-primary mb-1">
+              <h3 className="font-bold text-[13px] text-text-primary mb-1 whitespace-pre-line">
                 {f.title}
               </h3>
               <p className="text-[11px] text-text-secondary leading-relaxed">
