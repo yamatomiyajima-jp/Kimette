@@ -1,4 +1,3 @@
-import { createRoom } from "./actions";
 import { CreateRoomForm } from "./create-room-form";
 
 export default function CreatePage() {
@@ -13,7 +12,7 @@ export default function CreatePage() {
             みんなで選ぼう
           </p>
 
-          <CreateRoomForm action={createRoom} />
+          <CreateRoomForm />
         </div>
       </div>
     </div>

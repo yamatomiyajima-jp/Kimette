@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { setParticipantId } from "@/lib/session";
 
@@ -13,7 +12,8 @@ function generateSlug(): string {
   return slug;
 }
 
-export async function createRoom(formData: FormData) {
+/** ルームを作成し、URL slug を返す（リダイレクトはクライアント側で行う） */
+export async function createRoom(formData: FormData): Promise<string> {
   const nickname = (formData.get("nickname") as string)?.trim();
   const roomName = (formData.get("roomName") as string)?.trim();
   const chipsPerPerson = Number(formData.get("chipsPerPerson")) || 10;
@@ -66,5 +66,5 @@ export async function createRoom(formData: FormData) {
   // 参加者IDを cookie に保存
   await setParticipantId(room.id, participant.id);
 
-  redirect(`/room/${urlSlug}`);
+  return urlSlug;
 }

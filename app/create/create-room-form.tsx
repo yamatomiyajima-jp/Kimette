@@ -1,18 +1,28 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createRoom } from "./actions";
 
-interface CreateRoomFormProps {
-  action: (formData: FormData) => Promise<void>;
-}
-
-export function CreateRoomForm({ action }: CreateRoomFormProps) {
+export function CreateRoomForm() {
+  const router = useRouter();
   const [showOthersVotes, setShowOthersVotes] = useState(true);
   const [showVoteBreakdown, setShowVoteBreakdown] = useState(false);
   const [commentsAnonymous, setCommentsAnonymous] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true);
+    try {
+      const slug = await createRoom(formData);
+      router.push(`/room/${slug}`);
+    } catch {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
-    <form action={action}>
+    <form action={handleSubmit}>
       <label className="text-[13px] text-text-secondary block mb-1.5">
         あなたのニックネーム
       </label>
@@ -83,9 +93,10 @@ export function CreateRoomForm({ action }: CreateRoomFormProps) {
 
       <button
         type="submit"
-        className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md"
+        disabled={isSubmitting}
+        className="w-full py-[13px] bg-text-primary text-white text-sm font-medium rounded-md disabled:opacity-50"
       >
-        ルームを作成 →
+        {isSubmitting ? "作成中..." : "ルームを作成 →"}
       </button>
     </form>
   );
