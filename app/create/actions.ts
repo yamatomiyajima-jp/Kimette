@@ -30,7 +30,7 @@ export async function createRoom(formData: FormData): Promise<string> {
   const supabase = await createClient();
   const urlSlug = generateSlug();
 
-  // ルーム作成
+  // ルーム作成（id のみ取得）
   const { data: room, error: roomError } = await supabase
     .from("rooms")
     .insert({
@@ -43,14 +43,14 @@ export async function createRoom(formData: FormData): Promise<string> {
       comments_anonymous_mode: commentsAnonymous,
       items_anonymous: itemsAnonymous,
     })
-    .select()
+    .select("id")
     .single();
 
   if (roomError || !room) {
     throw new Error("ルームの作成に失敗しました");
   }
 
-  // 作成者を参加者として登録
+  // 作成者を参加者として登録（id のみ取得）
   const { data: participant, error: participantError } = await supabase
     .from("participants")
     .insert({
@@ -58,7 +58,7 @@ export async function createRoom(formData: FormData): Promise<string> {
       nickname,
       is_creator: true,
     })
-    .select()
+    .select("id")
     .single();
 
   if (participantError || !participant) {

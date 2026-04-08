@@ -17,7 +17,7 @@ export function CreateRoomForm() {
     setIsSubmitting(true);
     try {
       const slug = await createRoom(formData);
-      router.push(`/room/${slug}`);
+      router.replace(`/room/${slug}`);
     } catch {
       setIsSubmitting(false);
     }

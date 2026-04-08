@@ -7,6 +7,9 @@ import { ItemsPhase } from "./items-phase";
 import { VotePhase } from "./vote-phase";
 import { ResultPhase } from "./result-phase";
 
+// 常にリアルタイムデータを返す
+export const dynamic = "force-dynamic";
+
 interface RoomPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -28,30 +31,27 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   const typedRoom = room as Room;
 
-  // 参加者一覧を取得
-  const { data: participants } = await supabase
-    .from("participants")
-    .select("*")
-    .eq("room_id", typedRoom.id)
-    .order("joined_at", { ascending: true });
+  // 参加者一覧・商品一覧・Cookie を並列取得
+  const [participantsResult, itemsResult, participantId] = await Promise.all([
+    supabase
+      .from("participants")
+      .select("*")
+      .eq("room_id", typedRoom.id)
+      .order("joined_at", { ascending: true }),
+    supabase
+      .from("items")
+      .select("*")
+      .eq("room_id", typedRoom.id)
+      .order("created_at", { ascending: true }),
+    getParticipantId(typedRoom.id),
+  ]);
 
-  const typedParticipants = (participants ?? []) as Participant[];
+  const typedParticipants = (participantsResult.data ?? []) as Participant[];
+  const typedItems = (itemsResult.data ?? []) as Item[];
   const creator = typedParticipants.find((p) => p.is_creator);
-
-  // 既に参加済みかチェック
-  const participantId = await getParticipantId(typedRoom.id);
   const currentParticipant = typedParticipants.find(
     (p) => p.id === participantId
   );
-
-  // 商品一覧を取得（registration / voting で共通）
-  const { data: items } = await supabase
-    .from("items")
-    .select("*")
-    .eq("room_id", typedRoom.id)
-    .order("created_at", { ascending: true });
-
-  const typedItems = (items ?? []) as Item[];
 
   // 参加済みの場合はフェーズに応じた画面を表示
   if (currentParticipant) {
@@ -68,21 +68,23 @@ export default async function RoomPage({ params }: RoomPageProps) {
       );
     }
 
+    // voting / closed: 投票とコメントも必要
+    const itemIds = typedItems.map((i) => i.id);
+    const [votesResult, commentsResult] = await Promise.all([
+      supabase
+        .from("votes")
+        .select("*")
+        .in("item_id", itemIds.length > 0 ? itemIds : [""]),
+      supabase
+        .from("comments")
+        .select("*")
+        .in("item_id", itemIds.length > 0 ? itemIds : [""]),
+    ]);
+
+    const votes = (votesResult.data ?? []) as Vote[];
+    const comments = (commentsResult.data ?? []) as Comment[];
+
     if (typedRoom.phase === "voting") {
-      // 投票とコメントを取得
-      const itemIds = typedItems.map((i) => i.id);
-
-      const [votesResult, commentsResult] = await Promise.all([
-        supabase
-          .from("votes")
-          .select("*")
-          .in("item_id", itemIds.length > 0 ? itemIds : [""]),
-        supabase
-          .from("comments")
-          .select("*")
-          .in("item_id", itemIds.length > 0 ? itemIds : [""]),
-      ]);
-
       return (
         <RoomLayout>
           <VotePhase
@@ -90,47 +92,31 @@ export default async function RoomPage({ params }: RoomPageProps) {
             items={typedItems}
             participants={typedParticipants}
             currentParticipant={currentParticipant}
-            votes={(votesResult.data ?? []) as Vote[]}
-            comments={(commentsResult.data ?? []) as Comment[]}
+            votes={votes}
+            comments={comments}
           />
         </RoomLayout>
       );
     }
 
-    // closed フェーズ: 結果表示
-    {
-      const itemIds = typedItems.map((i) => i.id);
-
-      const [votesResult, commentsResult] = await Promise.all([
-        supabase
-          .from("votes")
-          .select("*")
-          .in("item_id", itemIds.length > 0 ? itemIds : [""]),
-        supabase
-          .from("comments")
-          .select("*")
-          .in("item_id", itemIds.length > 0 ? itemIds : [""]),
-      ]);
-
-      return (
-        <RoomLayout>
-          <ResultPhase
-            room={typedRoom}
-            items={typedItems}
-            participants={typedParticipants}
-            currentParticipant={currentParticipant}
-            votes={(votesResult.data ?? []) as Vote[]}
-            comments={(commentsResult.data ?? []) as Comment[]}
-          />
-        </RoomLayout>
-      );
-    }
+    // closed フェーズ
+    return (
+      <RoomLayout>
+        <ResultPhase
+          room={typedRoom}
+          items={typedItems}
+          participants={typedParticipants}
+          currentParticipant={currentParticipant}
+          votes={votes}
+          comments={comments}
+        />
+      </RoomLayout>
+    );
   }
 
-  // 未参加かつ結果発表済み: 結果画面を表示（参加登録不要）
+  // 未参加かつ結果発表済み: 結果画面を表示
   if (typedRoom.phase === "closed") {
     const itemIds = typedItems.map((i) => i.id);
-
     const [votesResult, commentsResult] = await Promise.all([
       supabase
         .from("votes")
@@ -156,7 +142,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
     );
   }
 
-  // 未参加: 投票フェーズ中でも参加可能
+  // 未参加: 参加フォーム表示
   return (
     <RoomLayout>
       <div className="text-center py-5">

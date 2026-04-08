@@ -249,8 +249,13 @@ function AddItemForm({
   onClose: () => void;
 }) {
   async function handleSubmit(formData: FormData) {
-    await addItem(formData);
+    // 楽観的更新: フォームを即座に閉じてからサーバーに送信
     onClose();
+    try {
+      await addItem(formData);
+    } catch {
+      // エラー時は Realtime で自然に同期される
+    }
   }
 
   return (
