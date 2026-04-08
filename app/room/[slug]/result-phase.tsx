@@ -4,7 +4,7 @@ interface ResultPhaseProps {
   room: Room;
   items: Item[];
   participants: Participant[];
-  currentParticipant: Participant;
+  currentParticipant: Participant | null;
   votes: Vote[];
   comments: Comment[];
 }
@@ -33,7 +33,7 @@ export function ResultPhase({
     votes,
     comments,
     participants,
-    currentParticipant.id
+    currentParticipant?.id ?? ""
   );
 
   return (
@@ -76,7 +76,19 @@ export function ResultPhase({
                   isWinner ? "text-text-info text-sm" : ""
                 }`}
               >
-                📦 {ranked.item.name}
+                📦{" "}
+                {ranked.item.product_url ? (
+                  <a
+                    href={ranked.item.product_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    {ranked.item.name}
+                  </a>
+                ) : (
+                  ranked.item.name
+                )}
               </span>
             </div>
 
@@ -143,7 +155,7 @@ export function ResultPhase({
                       <div className="text-[11px] text-text-secondary font-medium mb-0.5">
                         {room.comments_anonymous
                           ? "匿名"
-                          : c.participant_id === currentParticipant.id
+                          : currentParticipant && c.participant_id === currentParticipant.id
                             ? "あなた"
                             : participants.find(
                                   (p) => p.id === c.participant_id
@@ -180,7 +192,21 @@ function VoteBreakdown({ rankedItems }: { rankedItems: RankedItem[] }) {
       <div className="mt-2 space-y-3">
         {rankedItems.map((ranked) => (
           <div key={ranked.item.id} className="text-xs">
-            <div className="font-medium mb-1">📦 {ranked.item.name}</div>
+            <div className="font-medium mb-1">
+              📦{" "}
+              {ranked.item.product_url ? (
+                <a
+                  href={ranked.item.product_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-info underline"
+                >
+                  {ranked.item.name}
+                </a>
+              ) : (
+                ranked.item.name
+              )}
+            </div>
             {ranked.voteBreakdown.length > 0 ? (
               ranked.voteBreakdown.map((v, i) => (
                 <div

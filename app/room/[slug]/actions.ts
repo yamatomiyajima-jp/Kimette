@@ -35,6 +35,8 @@ export async function addItem(formData: FormData) {
   const roomId = formData.get("roomId") as string;
   const name = (formData.get("name") as string)?.trim();
   const description = (formData.get("description") as string)?.trim() || null;
+  const productUrl = (formData.get("productUrl") as string)?.trim() || null;
+  const isAnonymous = formData.get("isAnonymous") === "on";
   const slug = formData.get("slug") as string;
 
   if (!name) {
@@ -53,6 +55,8 @@ export async function addItem(formData: FormData) {
     added_by: participantId,
     name,
     description,
+    product_url: productUrl,
+    is_anonymous: isAnonymous,
   });
 
   if (error) {

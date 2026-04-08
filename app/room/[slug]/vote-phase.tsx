@@ -264,7 +264,21 @@ export function VotePhase({
           >
             {/* 商品名 + チップ数 */}
             <div className="flex justify-between items-center mb-2">
-              <span className="text-[13px] font-medium">📦 {item.name}</span>
+              <span className="text-[13px] font-medium">
+                📦{" "}
+                {item.product_url ? (
+                  <a
+                    href={item.product_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-text-info underline"
+                  >
+                    {item.name}
+                  </a>
+                ) : (
+                  item.name
+                )}
+              </span>
               <span className="text-sm font-medium text-text-info">
                 {myChips}個
               </span>

@@ -127,6 +127,35 @@ export default async function RoomPage({ params }: RoomPageProps) {
     }
   }
 
+  // 未参加かつ結果発表済み: 結果画面を表示（参加登録不要）
+  if (typedRoom.phase === "closed") {
+    const itemIds = typedItems.map((i) => i.id);
+
+    const [votesResult, commentsResult] = await Promise.all([
+      supabase
+        .from("votes")
+        .select("*")
+        .in("item_id", itemIds.length > 0 ? itemIds : [""]),
+      supabase
+        .from("comments")
+        .select("*")
+        .in("item_id", itemIds.length > 0 ? itemIds : [""]),
+    ]);
+
+    return (
+      <RoomLayout>
+        <ResultPhase
+          room={typedRoom}
+          items={typedItems}
+          participants={typedParticipants}
+          currentParticipant={null}
+          votes={(votesResult.data ?? []) as Vote[]}
+          comments={(commentsResult.data ?? []) as Comment[]}
+        />
+      </RoomLayout>
+    );
+  }
+
   // 未参加: 投票フェーズ中でも参加可能
   return (
     <RoomLayout>

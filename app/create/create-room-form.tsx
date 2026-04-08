@@ -9,6 +9,7 @@ export function CreateRoomForm() {
   const [showOthersVotes, setShowOthersVotes] = useState(true);
   const [showVoteBreakdown, setShowVoteBreakdown] = useState(false);
   const [commentsAnonymous, setCommentsAnonymous] = useState(false);
+  const [itemsAnonymous, setItemsAnonymous] = useState<"off" | "optional" | "on">("off");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(formData: FormData) {
@@ -87,8 +88,22 @@ export function CreateRoomForm() {
           checked={commentsAnonymous}
           onChange={setCommentsAnonymous}
           name="commentsAnonymous"
-          isLast
         />
+        <div className="mt-2.5">
+          <div className="flex justify-between items-center">
+            <span className="text-[13px]">商品登録者の表示</span>
+            <input type="hidden" name="itemsAnonymous" value={itemsAnonymous} />
+            <select
+              value={itemsAnonymous}
+              onChange={(e) => setItemsAnonymous(e.target.value as "off" | "optional" | "on")}
+              className="text-[11px] font-medium px-2 py-0.5 rounded-[10px] bg-bg-info text-text-info border-0 appearance-none text-center"
+            >
+              <option value="off">名前を表示</option>
+              <option value="optional">匿名を選択可</option>
+              <option value="on">全員匿名</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <button

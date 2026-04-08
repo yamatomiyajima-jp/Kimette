@@ -66,13 +66,17 @@ export function ItemsPhase({
     setItems(initialItems);
   }, [initialItems]);
 
-  const getParticipantName = useCallback(
-    (participantId: string) => {
-      return (
-        participants.find((p) => p.id === participantId)?.nickname ?? "不明"
-      );
+  const getAuthorDisplay = useCallback(
+    (item: Item) => {
+      // 全員匿名の場合
+      if (room.items_anonymous === "on") return "匿名が追加";
+      // 匿名選択可で、登録者が匿名を選んだ場合
+      if (room.items_anonymous === "optional" && item.is_anonymous) return "匿名が追加";
+      // 通常表示
+      const name = participants.find((p) => p.id === item.added_by)?.nickname ?? "不明";
+      return `${name}が追加`;
     },
-    [participants]
+    [participants, room.items_anonymous]
   );
 
   return (
@@ -98,7 +102,7 @@ export function ItemsPhase({
         <ItemCard
           key={item.id}
           item={item}
-          authorName={getParticipantName(item.added_by)}
+          authorDisplay={getAuthorDisplay(item)}
           isOwner={item.added_by === currentParticipant.id}
           isEditing={editingItemId === item.id}
           onEdit={() => setEditingItemId(item.id)}
@@ -113,6 +117,7 @@ export function ItemsPhase({
         <AddItemForm
           roomId={room.id}
           slug={room.url_slug}
+          itemsAnonymous={room.items_anonymous}
           onClose={() => setShowAddForm(false)}
         />
       ) : (
@@ -145,7 +150,7 @@ export function ItemsPhase({
 
 function ItemCard({
   item,
-  authorName,
+  authorDisplay,
   isOwner,
   isEditing,
   onEdit,
@@ -154,7 +159,7 @@ function ItemCard({
   slug,
 }: {
   item: Item;
-  authorName: string;
+  authorDisplay: string;
   isOwner: boolean;
   isEditing: boolean;
   onEdit: () => void;
@@ -173,9 +178,22 @@ function ItemCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-1">
           <div>
-            <div className="text-[13px] font-medium">{item.name}</div>
+            <div className="text-[13px] font-medium">
+              {item.product_url ? (
+                <a
+                  href={item.product_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-info underline"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                item.name
+              )}
+            </div>
             <div className="text-[11px] text-text-tertiary">
-              {authorName}が追加
+              {authorDisplay}
             </div>
           </div>
           {isOwner && (
@@ -221,10 +239,12 @@ function ItemCard({
 function AddItemForm({
   roomId,
   slug,
+  itemsAnonymous,
   onClose,
 }: {
   roomId: string;
   slug: string;
+  itemsAnonymous: string;
   onClose: () => void;
 }) {
   async function handleSubmit(formData: FormData) {
@@ -252,6 +272,16 @@ function AddItemForm({
       />
 
       <label className="text-[13px] text-text-secondary block mb-1.5">
+        商品リンク（任意）
+      </label>
+      <input
+        type="url"
+        name="productUrl"
+        placeholder="https://example.com/product"
+        className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3"
+      />
+
+      <label className="text-[13px] text-text-secondary block mb-1.5">
         説明（任意）
       </label>
       <textarea
@@ -260,6 +290,19 @@ function AddItemForm({
         placeholder="商品の説明を追加"
         className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 resize-none"
       />
+
+      {/* 匿名選択可の場合のみチェックボックスを表示 */}
+      {itemsAnonymous === "optional" && (
+        <label className="flex items-center gap-2 text-[13px] text-text-secondary mb-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="isAnonymous"
+            value="on"
+            className="w-4 h-4 rounded"
+          />
+          匿名で登録する
+        </label>
+      )}
 
       <div className="flex gap-2">
         <button
