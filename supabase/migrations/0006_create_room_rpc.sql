@@ -9,7 +9,8 @@ CREATE OR REPLACE FUNCTION create_room_with_creator(
   p_votes_anonymous text,
   p_comments_anonymous_mode text,
   p_items_anonymous text,
-  p_nickname text
+  p_nickname text,
+  p_voting_starts_at timestamptz DEFAULT NULL
 )
 RETURNS json
 LANGUAGE plpgsql
@@ -22,10 +23,12 @@ BEGIN
   -- ルーム作成
   INSERT INTO rooms (
     name, url_slug, chips_per_person, start_mode,
-    vote_visibility, votes_anonymous, comments_anonymous_mode, items_anonymous
+    vote_visibility, votes_anonymous, comments_anonymous_mode, items_anonymous,
+    voting_starts_at
   ) VALUES (
     p_room_name, p_url_slug, p_chips_per_person, p_start_mode,
-    p_vote_visibility, p_votes_anonymous, p_comments_anonymous_mode, p_items_anonymous
+    p_vote_visibility, p_votes_anonymous, p_comments_anonymous_mode, p_items_anonymous,
+    p_voting_starts_at
   )
   RETURNING id INTO v_room_id;
 

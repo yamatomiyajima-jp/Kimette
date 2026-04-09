@@ -7,6 +7,7 @@ import type { AnonymousMode, VoteVisibility } from "@/lib/types";
 
 export function CreateRoomForm() {
   const router = useRouter();
+  const [startMode, setStartMode] = useState("manual");
   const [voteVisibility, setVoteVisibility] = useState<VoteVisibility>("total_only");
   const [votesAnonymous, setVotesAnonymous] = useState<AnonymousMode>("off");
   const [commentsAnonymous, setCommentsAnonymous] = useState<AnonymousMode>("off");
@@ -65,12 +66,27 @@ export function CreateRoomForm() {
       </label>
       <select
         name="startMode"
-        defaultValue="manual"
+        value={startMode}
+        onChange={(e) => setStartMode(e.target.value)}
         className="w-full px-3 py-2.5 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-4"
       >
         <option value="manual">作成者が手動で開始</option>
         <option value="scheduled">期日で自動開始</option>
       </select>
+
+      {startMode === "scheduled" && (
+        <>
+          <label className="text-[13px] text-text-secondary block mb-1.5">
+            投票開始日時
+          </label>
+          <input
+            type="datetime-local"
+            name="votingStartsAt"
+            required
+            className="w-full px-3 py-2.5 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-4"
+          />
+        </>
+      )}
 
       {/* 詳細設定 */}
       <div className="bg-bg-secondary rounded-md p-3 mb-[18px] space-y-3">
