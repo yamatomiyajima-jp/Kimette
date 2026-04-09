@@ -172,8 +172,21 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-[11px] text-text-tertiary bg-white border-t border-black/[0.06]">
-        &copy; 2026 Kimette
+      <footer className="py-6 bg-white border-t border-black/[0.06]">
+        <div className="flex justify-center gap-4 mb-2 text-[11px]">
+          <Link href="/terms" className="text-text-tertiary hover:text-text-secondary">
+            利用規約
+          </Link>
+          <Link href="/privacy" className="text-text-tertiary hover:text-text-secondary">
+            プライバシーポリシー
+          </Link>
+          <Link href="/contact" className="text-text-tertiary hover:text-text-secondary">
+            お問い合わせ
+          </Link>
+        </div>
+        <div className="text-center text-[11px] text-text-tertiary">
+          &copy; 2026 Kimette
+        </div>
       </footer>
     </div>
   );
