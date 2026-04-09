@@ -29,7 +29,41 @@ export default async function RoomPage({ params }: RoomPageProps) {
     notFound();
   }
 
-  const typedRoom = room as Room;
+  let typedRoom = room as Room;
+
+  // 期日自動開始: voting_starts_at を過ぎていたら投票フェーズに移行
+  if (
+    typedRoom.phase === "registration" &&
+    typedRoom.start_mode === "scheduled" &&
+    typedRoom.voting_starts_at &&
+    new Date(typedRoom.voting_starts_at) <= new Date()
+  ) {
+    const { data: updated } = await supabase
+      .from("rooms")
+      .update({ phase: "voting" })
+      .eq("id", typedRoom.id)
+      .eq("phase", "registration")
+      .select()
+      .single();
+    if (updated) typedRoom = updated as Room;
+  }
+
+  // 期日自動終了: voting_ends_at を過ぎていたら結果発表に移行
+  if (
+    typedRoom.phase === "voting" &&
+    typedRoom.end_mode === "scheduled" &&
+    typedRoom.voting_ends_at &&
+    new Date(typedRoom.voting_ends_at) <= new Date()
+  ) {
+    const { data: updated } = await supabase
+      .from("rooms")
+      .update({ phase: "closed" })
+      .eq("id", typedRoom.id)
+      .eq("phase", "voting")
+      .select()
+      .single();
+    if (updated) typedRoom = updated as Room;
+  }
 
   // 参加者一覧・商品一覧・Cookie を並列取得
   const [participantsResult, itemsResult, participantId] = await Promise.all([

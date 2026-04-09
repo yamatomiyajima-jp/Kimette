@@ -8,6 +8,7 @@ import type { AnonymousMode, VoteVisibility } from "@/lib/types";
 export function CreateRoomForm() {
   const router = useRouter();
   const [startMode, setStartMode] = useState("manual");
+  const [endMode, setEndMode] = useState("manual");
   const [voteVisibility, setVoteVisibility] = useState<VoteVisibility>("total_only");
   const [votesAnonymous, setVotesAnonymous] = useState<AnonymousMode>("off");
   const [commentsAnonymous, setCommentsAnonymous] = useState<AnonymousMode>("off");
@@ -82,6 +83,33 @@ export function CreateRoomForm() {
           <input
             type="datetime-local"
             name="votingStartsAt"
+            required
+            className="w-full px-3 py-2.5 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-4"
+          />
+        </>
+      )}
+
+      <label className="text-[13px] text-text-secondary block mb-1.5">
+        結果発表のタイミング
+      </label>
+      <select
+        name="endMode"
+        value={endMode}
+        onChange={(e) => setEndMode(e.target.value)}
+        className="w-full px-3 py-2.5 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-4"
+      >
+        <option value="manual">作成者が手動で発表</option>
+        <option value="scheduled">期日で自動発表</option>
+      </select>
+
+      {endMode === "scheduled" && (
+        <>
+          <label className="text-[13px] text-text-secondary block mb-1.5">
+            結果発表日時
+          </label>
+          <input
+            type="datetime-local"
+            name="votingEndsAt"
             required
             className="w-full px-3 py-2.5 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-4"
           />

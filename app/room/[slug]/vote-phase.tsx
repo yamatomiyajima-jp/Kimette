@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Room, Item, Participant, Vote, Comment } from "@/lib/types";
 import { submitVote, closeRoom } from "./actions";
 import { ParticipantsList } from "./participants-list";
+import { InviteLinkButton } from "./invite-link-button";
 
 interface VotePhaseProps {
   room: Room;
@@ -290,6 +291,9 @@ export function VotePhase({
         participants={participants}
         isAnonymous={room.items_anonymous === "on"}
       />
+
+      {/* 招待リンク */}
+      <InviteLinkButton slug={room.url_slug} />
 
       {/* 確定済みバナー */}
       {isConfirmed && (

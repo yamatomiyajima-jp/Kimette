@@ -23,6 +23,8 @@ export async function createRoom(formData: FormData): Promise<string> {
   const commentsAnonymous = (formData.get("commentsAnonymous") as string) || "off";
   const itemsAnonymous = (formData.get("itemsAnonymous") as string) || "off";
   const votingStartsAt = formData.get("votingStartsAt") as string | null;
+  const endMode = (formData.get("endMode") as string) || "manual";
+  const votingEndsAt = formData.get("votingEndsAt") as string | null;
 
   if (!nickname || !roomName) {
     throw new Error("ニックネームとルーム名は必須です");
@@ -43,6 +45,8 @@ export async function createRoom(formData: FormData): Promise<string> {
     p_items_anonymous: itemsAnonymous,
     p_nickname: nickname,
     p_voting_starts_at: votingStartsAt ? new Date(votingStartsAt).toISOString() : null,
+    p_end_mode: endMode,
+    p_voting_ends_at: votingEndsAt ? new Date(votingEndsAt).toISOString() : null,
   });
 
   if (error || !data) {

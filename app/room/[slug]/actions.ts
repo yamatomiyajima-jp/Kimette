@@ -37,6 +37,7 @@ export async function addItem(formData: FormData) {
   const description = (formData.get("description") as string)?.trim() || null;
   const productUrl = (formData.get("productUrl") as string)?.trim() || null;
   const isAnonymous = formData.get("isAnonymous") === "on";
+  const editableByOthers = formData.get("editableByOthers") === "on";
 
   if (!name) {
     throw new Error("商品名は必須です");
@@ -59,6 +60,7 @@ export async function addItem(formData: FormData) {
     description,
     product_url: productUrl,
     is_anonymous: isAnonymous,
+    editable_by_others: editableByOthers,
   });
 
   if (error) {
@@ -82,19 +84,29 @@ export async function updateItem(formData: FormData) {
     throw new Error("参加者情報が見つかりません");
   }
 
-  // 権限確認と更新を1クエリで実行（added_by でフィルタ）
-  const { error, count } = await supabase
+  // 対象商品を取得して権限チェック
+  const { data: item } = await supabase
     .from("items")
-    .update({ description })
+    .select("added_by, editable_by_others")
     .eq("id", itemId)
-    .eq("added_by", participantId);
+    .single();
+
+  if (!item) {
+    throw new Error("商品が見つかりません");
+  }
+
+  const isOwner = item.added_by === participantId;
+  if (!isOwner && !item.editable_by_others) {
+    throw new Error("この商品を編集する権限がありません");
+  }
+
+  const { error } = await supabase
+    .from("items")
+    .update({ description, last_edited_by: participantId })
+    .eq("id", itemId);
 
   if (error) {
     throw new Error("商品の更新に失敗しました");
-  }
-
-  if (count === 0) {
-    throw new Error("この商品を編集する権限がありません");
   }
 }
 

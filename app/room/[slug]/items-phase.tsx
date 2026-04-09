@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Room, Item, Participant } from "@/lib/types";
 import { ParticipantsList } from "./participants-list";
 import { addItem, updateItem, deleteItem, startVoting } from "./actions";
+import { InviteLinkButton } from "./invite-link-button";
 
 interface ItemsPhaseProps {
   room: Room;
@@ -105,19 +106,25 @@ export function ItemsPhase({
       <InviteLinkButton slug={room.url_slug} />
 
       {/* 商品リスト */}
-      {items.map((item) => (
-        <ItemCard
-          key={item.id}
-          item={item}
-          authorDisplay={getAuthorDisplay(item)}
-          isOwner={item.added_by === currentParticipant.id}
-          isEditing={editingItemId === item.id}
-          onEdit={() => setEditingItemId(item.id)}
-          onCancelEdit={() => { setEditingItemId(null); router.refresh(); }}
-          roomId={room.id}
-          slug={room.url_slug}
-        />
-      ))}
+      {items.map((item) => {
+        const isOwner = item.added_by === currentParticipant.id;
+        const canEdit = isOwner || item.editable_by_others;
+        return (
+          <ItemCard
+            key={item.id}
+            item={item}
+            authorDisplay={getAuthorDisplay(item)}
+            isOwner={isOwner}
+            canEdit={canEdit}
+            isEditing={editingItemId === item.id}
+            onEdit={() => setEditingItemId(item.id)}
+            onCancelEdit={() => { setEditingItemId(null); router.refresh(); }}
+            roomId={room.id}
+            slug={room.url_slug}
+            participants={participants}
+          />
+        );
+      })}
 
       {/* 商品追加フォーム */}
       {showAddForm ? (
@@ -149,21 +156,29 @@ function ItemCard({
   item,
   authorDisplay,
   isOwner,
+  canEdit,
   isEditing,
   onEdit,
   onCancelEdit,
   roomId,
   slug,
+  participants,
 }: {
   item: Item;
   authorDisplay: string;
   isOwner: boolean;
+  canEdit: boolean;
   isEditing: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
   roomId: string;
   slug: string;
+  participants: Participant[];
 }) {
+  const lastEditorName = item.last_edited_by
+    ? participants.find((p) => p.id === item.last_edited_by)?.nickname ?? "不明"
+    : null;
+
   return (
     <div className="p-2.5 border-[0.5px] border-black/15 rounded-md mb-2">
       <div className="flex-1 min-w-0">
@@ -185,6 +200,9 @@ function ItemCard({
             </div>
             <div className="text-[11px] text-text-tertiary">
               {authorDisplay}
+              {lastEditorName && (
+                <span className="ml-1">（{lastEditorName}が編集）</span>
+              )}
             </div>
           </div>
           {isOwner && (
@@ -211,7 +229,7 @@ function ItemCard({
                 {item.description}
               </div>
             )}
-            {isOwner && (
+            {canEdit && (
               <button
                 type="button"
                 onClick={onEdit}
@@ -293,6 +311,17 @@ function AddItemForm({
         placeholder="商品の説明を追加"
         className="w-full px-3 py-2 text-sm border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-3 resize-none disabled:opacity-50"
       />
+
+      <label className="flex items-center gap-2 text-[13px] text-text-secondary mb-3 cursor-pointer">
+        <input
+          type="checkbox"
+          name="editableByOthers"
+          value="on"
+          disabled={isSubmitting}
+          className="w-4 h-4 rounded"
+        />
+        他の参加者も説明を編集できるようにする
+      </label>
 
       {/* 匿名選択可の場合のみチェックボックスを表示 */}
       {itemsAnonymous === "optional" && (
@@ -397,60 +426,6 @@ function StartVotingButton({
         {isSubmitting ? "開始しています..." : "投票を開始 →"}
       </button>
     </form>
-  );
-}
-
-function InviteLinkButton({ slug }: { slug: string }) {
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  async function handleShare() {
-    const url = `${window.location.origin}/room/${slug}`;
-    const text = "Kimetteで一緒に投票しよう！";
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Kimette", text, url });
-        return;
-      } catch {
-        // キャンセル時は何もしない
-      }
-      return;
-    }
-
-    // フォールバック: クリップボードにコピー
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = url;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-    }
-    setCopied(true);
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleShare}
-      className={`w-full py-2.5 text-[13px] rounded-md mb-4 font-medium transition-colors ${
-        copied
-          ? "bg-bg-success text-text-success"
-          : "bg-bg-info text-text-info"
-      }`}
-    >
-      {copied ? "✓ コピーしました" : "招待リンクを共有"}
-    </button>
   );
 }
 
