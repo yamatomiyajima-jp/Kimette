@@ -113,7 +113,7 @@ export function ItemsPhase({
           isOwner={item.added_by === currentParticipant.id}
           isEditing={editingItemId === item.id}
           onEdit={() => setEditingItemId(item.id)}
-          onCancelEdit={() => setEditingItemId(null)}
+          onCancelEdit={() => { setEditingItemId(null); router.refresh(); }}
           roomId={room.id}
           slug={room.url_slug}
         />
@@ -125,7 +125,7 @@ export function ItemsPhase({
           roomId={room.id}
           slug={room.url_slug}
           itemsAnonymous={room.items_anonymous}
-          onClose={() => setShowAddForm(false)}
+          onClose={() => { setShowAddForm(false); router.refresh(); }}
         />
       ) : (
         <button
