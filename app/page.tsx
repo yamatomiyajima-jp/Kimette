@@ -21,22 +21,22 @@ const STEPS = [
 
 const FEATURES = [
   {
-    icon: "🎚️",
+    icon: "/icons/heart.png",
     title: "「ちょっといい」\nも伝わる",
     desc: "1票か0票かではなく、チップの枚数で気持ちの強さをそのまま表現できる。",
   },
   {
-    icon: "🔗",
+    icon: "/icons/id-card.png",
     title: "アカウント不要",
     desc: "URLを開いてニックネームを入れるだけ。面倒な登録は一切不要。",
   },
   {
-    icon: "💬",
+    icon: "/icons/chat.png",
     title: "理由が見える",
     desc: "コメント機能で「なぜそれを選んだか」を共有。",
   },
   {
-    icon: "🔧",
+    icon: "/icons/gear.png",
     title: "シーンに合わせて調整",
     desc: "匿名投票・投票状況の公開範囲・コメントの匿名など、用途に合わせて細かく設定可能。",
   },
@@ -121,7 +121,9 @@ export default function Home() {
               key={f.title}
               className="bg-bg-secondary rounded-xl p-4 text-center"
             >
-              <div className="text-2xl mb-2">{f.icon}</div>
+              <div className="mb-2 flex justify-center">
+                <Image src={f.icon} alt="" width={32} height={32} />
+              </div>
               <h3 className="font-bold text-[13px] text-text-primary mb-1 whitespace-pre-line">
                 {f.title}
               </h3>
