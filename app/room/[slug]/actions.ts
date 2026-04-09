@@ -74,6 +74,7 @@ export async function updateItem(formData: FormData) {
   const itemId = formData.get("itemId") as string;
   const roomId = formData.get("roomId") as string;
   const description = (formData.get("description") as string)?.trim() || null;
+  const productUrl = (formData.get("productUrl") as string)?.trim() || null;
 
   const [participantId, supabase] = await Promise.all([
     getParticipantId(roomId),
@@ -102,7 +103,7 @@ export async function updateItem(formData: FormData) {
 
   const { error } = await supabase
     .from("items")
-    .update({ description, last_edited_by: participantId })
+    .update({ description, product_url: productUrl, last_edited_by: participantId })
     .eq("id", itemId);
 
   if (error) {

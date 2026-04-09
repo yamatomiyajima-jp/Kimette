@@ -210,6 +210,7 @@ function ItemCard({
               itemId={item.id}
               roomId={roomId}
               slug={slug}
+              onDeleted={onCancelEdit}
             />
           )}
         </div>
@@ -362,10 +363,12 @@ function DeleteItemButton({
   itemId,
   roomId,
   slug,
+  onDeleted,
 }: {
   itemId: string;
   roomId: string;
   slug: string;
+  onDeleted: () => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -378,9 +381,9 @@ function DeleteItemButton({
       formData.set("roomId", roomId);
       formData.set("slug", slug);
       await deleteItem(formData);
+      onDeleted();
     } catch {
       setIsDeleting(false);
-      // エラーは握りつぶして静かに失敗させる
     }
   }
 
@@ -456,6 +459,21 @@ function EditDescriptionForm({
       <input type="hidden" name="roomId" value={roomId} />
       <input type="hidden" name="slug" value={slug} />
 
+      <label className="text-[10px] text-text-tertiary block mb-1">
+        商品リンク（任意）
+      </label>
+      <input
+        type="url"
+        name="productUrl"
+        disabled={isSubmitting}
+        defaultValue={item.product_url ?? ""}
+        placeholder="https://example.com/product"
+        className="w-full px-2 py-1.5 text-xs border-[0.5px] border-black/30 rounded-md bg-bg-primary text-text-primary mb-2 disabled:opacity-50"
+      />
+
+      <label className="text-[10px] text-text-tertiary block mb-1">
+        説明（任意）
+      </label>
       <textarea
         name="description"
         rows={2}
