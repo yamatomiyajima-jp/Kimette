@@ -173,7 +173,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-6 text-center text-[11px] text-text-tertiary bg-white border-t border-black/[0.06]">
-        &copy; 2025 Kimette
+        &copy; 2026 Kimette
       </footer>
     </div>
   );
