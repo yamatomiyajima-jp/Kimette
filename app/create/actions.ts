@@ -44,9 +44,9 @@ export async function createRoom(formData: FormData): Promise<string> {
     p_comments_anonymous_mode: commentsAnonymous,
     p_items_anonymous: itemsAnonymous,
     p_nickname: nickname,
-    p_voting_starts_at: votingStartsAt ? new Date(votingStartsAt).toISOString() : null,
+    p_voting_starts_at: votingStartsAt || null,
     p_end_mode: endMode,
-    p_voting_ends_at: votingEndsAt ? new Date(votingEndsAt).toISOString() : null,
+    p_voting_ends_at: votingEndsAt || null,
   });
 
   if (error || !data) {

@@ -20,6 +20,15 @@ export function CreateRoomForm() {
     setIsSubmitting(true);
     try {
       const formData = new FormData(e.currentTarget);
+      // datetime-local の値をブラウザのタイムゾーンでISO文字列に変換
+      const votingStartsAt = formData.get("votingStartsAt") as string;
+      if (votingStartsAt) {
+        formData.set("votingStartsAt", new Date(votingStartsAt).toISOString());
+      }
+      const votingEndsAt = formData.get("votingEndsAt") as string;
+      if (votingEndsAt) {
+        formData.set("votingEndsAt", new Date(votingEndsAt).toISOString());
+      }
       const slug = await createRoom(formData);
       router.replace(`/room/${slug}`);
     } catch {
