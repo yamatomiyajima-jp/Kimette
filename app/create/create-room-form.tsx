@@ -13,9 +13,11 @@ export function CreateRoomForm() {
   const [itemsAnonymous, setItemsAnonymous] = useState<AnonymousMode>("off");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
     try {
+      const formData = new FormData(e.currentTarget);
       const slug = await createRoom(formData);
       router.replace(`/room/${slug}`);
     } catch {
@@ -24,7 +26,7 @@ export function CreateRoomForm() {
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <label className="text-[13px] text-text-secondary block mb-1.5">
         あなたのニックネーム
       </label>

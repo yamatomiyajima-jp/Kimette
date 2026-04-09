@@ -13,15 +13,17 @@ export function JoinForm({ roomId, slug }: JoinFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
     formData.set("roomId", roomId);
     await joinRoom(formData);
     router.refresh();
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <label className="text-[13px] text-text-secondary block mb-1.5">
         あなたのニックネームを入力
       </label>

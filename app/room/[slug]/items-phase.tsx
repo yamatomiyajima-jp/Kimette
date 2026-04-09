@@ -240,9 +240,11 @@ function AddItemForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
     try {
+      const formData = new FormData(e.currentTarget);
       await addItem(formData);
       onClose();
     } catch {
@@ -252,7 +254,7 @@ function AddItemForm({
 
   return (
     <form
-      action={handleSubmit}
+      onSubmit={handleSubmit}
       className="border-[0.5px] border-black/15 rounded-md p-3 mb-3"
     >
       <input type="hidden" name="roomId" value={roomId} />
@@ -376,13 +378,15 @@ function StartVotingButton({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
     await startVoting(formData);
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <input type="hidden" name="roomId" value={roomId} />
       <input type="hidden" name="slug" value={slug} />
       <button
@@ -463,14 +467,16 @@ function EditDescriptionForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
     await updateItem(formData);
     onClose();
   }
 
   return (
-    <form action={handleSubmit} className="mt-2">
+    <form onSubmit={handleSubmit} className="mt-2">
       <input type="hidden" name="itemId" value={item.id} />
       <input type="hidden" name="roomId" value={roomId} />
       <input type="hidden" name="slug" value={slug} />

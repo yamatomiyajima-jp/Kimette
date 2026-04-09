@@ -609,13 +609,15 @@ export function VotePhase({
 function CloseRoomButton({ roomId, slug }: { roomId: string; slug: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
     await closeRoom(formData);
   }
 
   return (
-    <form action={handleSubmit} className="mt-4">
+    <form onSubmit={handleSubmit} className="mt-4">
       <input type="hidden" name="roomId" value={roomId} />
       <input type="hidden" name="slug" value={slug} />
       <button
