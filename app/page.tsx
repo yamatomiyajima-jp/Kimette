@@ -22,7 +22,7 @@ const STEPS = [
 const FEATURES = [
   {
     icon: "/icons/heart.png",
-    title: "「ちょっといい」\nも伝わる",
+    title: "「ちょっといい」\nが伝わる",
     desc: "1票か0票かではなく、チップの枚数で気持ちの強さをそのまま表現できる。",
   },
   {
